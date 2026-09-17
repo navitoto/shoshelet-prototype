@@ -62,19 +62,31 @@ function openRelation(){restartRelation();document.getElementById('relationFrom'
 function relationNext(){let from=resolvePerson(document.getElementById('relationFrom').value);if(!from){toast('בחרו אדם מהרשימה');return}document.getElementById('relationFromConfirm').value=from.name;document.getElementById('relationTo').value=selectedPerson.name===from.name?'':selectedPerson.name;document.getElementById('relationPick').hidden=true;document.getElementById('relationChoose').hidden=false;document.getElementById('relationStep').textContent='שלב 2 מתוך 3';document.getElementById('relDot2').classList.add('on')}
 function relationBack(){if(!document.getElementById('path').hidden){restartRelation();relationNext()}else if(!document.getElementById('relationChoose').hidden){restartRelation()}else show('profile')}
 function restartRelation(){document.getElementById('relationPick').hidden=false;document.getElementById('relationChoose').hidden=true;document.getElementById('path').hidden=true;document.getElementById('relationStep').textContent='שלב 1 מתוך 3';document.getElementById('relDot2').classList.remove('on');document.getElementById('relDot3').classList.remove('on')}
-const relationPairs={
-'תומר כהן|איילת כהן':{summary:'איילת היא אמא של תומר',path:['תומר כהן','אמא שלו — איילת כהן']},
-'איילת כהן|תומר כהן':{summary:'תומר הוא הבן של איילת',path:['איילת כהן','הבן שלה — תומר כהן']},
-'איילת כהן|יוסי כהן':{summary:'יוסי הוא אחיה של איילת',path:['איילת כהן','אח שלה — יוסי כהן']},
-'יוסי כהן|איילת כהן':{summary:'איילת היא אחותו של יוסי',path:['יוסי כהן','אחותו — איילת כהן']},
-'יוסי כהן|רחל כהן':{summary:'רחל היא בת הזוג של יוסי',path:['יוסי כהן','בת זוגו — רחל כהן']},
-'רחל כהן|יוסי כהן':{summary:'יוסי הוא בן הזוג של רחל',path:['רחל כהן','בן זוגה — יוסי כהן']},
-'תומר כהן|יוסי כהן':{summary:'יוסי הוא הדוד של תומר',path:['תומר כהן','אמא שלו — איילת','אח שלה — יוסי כהן']},
-'תומר כהן|רחל כהן':{summary:'רחל היא דודה של תומר',path:['תומר כהן','אמא שלו — איילת','אח שלה — יוסי','בת זוגו — רחל']},
-'תומר כהן|מיכל אברהם':{summary:'מיכל היא בת הדודה של תומר',path:['תומר כהן','אמא שלו','אחותה','מיכל אברהם']}
+const relationshipGraph={};
+function connect(a,b,aToB,bToA){(relationshipGraph[a]??=[]).push({name:b,label:aToB});(relationshipGraph[b]??=[]).push({name:a,label:bToA})}
+connect('רחל כהן','יוסי כהן','בן זוגה — יוסי כהן','בת זוגו — רחל כהן');
+connect('יוסי כהן','איילת כהן','אחותו — איילת כהן','אחיה — יוסי כהן');
+connect('יוסי כהן','מיכל אברהם','אחותו למחצה — מיכל אברהם','אחיה למחצה — יוסי כהן');
+connect('איילת כהן','תומר כהן','בנה — תומר כהן','אמו — איילת כהן');
+connect('שרה כהן','יוסי כהן','בנה — יוסי כהן','אמו — שרה כהן');
+connect('שרה כהן','איילת כהן','בתה — איילת כהן','אמה — שרה כהן');
+connect('יצחק כהן','יוסי כהן','בנו — יוסי כהן','אביו — יצחק כהן');
+connect('יצחק כהן','איילת כהן','בתו — איילת כהן','אביה — יצחק כהן');
+connect('יצחק כהן','מיכל אברהם','בתו — מיכל אברהם','אביה — יצחק כהן');
+connect('יוסי כהן','נועה כהן','בתו — נועה כהן','אביה — יוסי כהן');
+connect('רחל כהן','נועה כהן','בתה — נועה כהן','אמה — רחל כהן');
+connect('יוסי כהן','עומר כהן','בנו — עומר כהן','אביו — יוסי כהן');
+connect('רחל כהן','עומר כהן','בנה — עומר כהן','אמו — רחל כהן');
+connect('יוסי כהן','איתי כהן','בנו — איתי כהן','אביו — יוסי כהן');
+const kinshipSummaries={
+'רחל כהן|איילת כהן':'רחל ואיילת הן גיסות','איילת כהן|רחל כהן':'איילת ורחל הן גיסות',
+'רחל כהן|מיכל אברהם':'רחל ומיכל הן גיסות','מיכל אברהם|רחל כהן':'מיכל ורחל הן גיסות',
+'איילת כהן|יוסי כהן':'יוסי הוא אחיה של איילת','יוסי כהן|איילת כהן':'איילת היא אחותו של יוסי',
+'רחל כהן|יוסי כהן':'יוסי הוא בן הזוג של רחל','יוסי כהן|רחל כהן':'רחל היא בת הזוג של יוסי',
+'תומר כהן|איילת כהן':'איילת היא אמא של תומר','איילת כהן|תומר כהן':'תומר הוא הבן של איילת'
 };
-function reversePathFromTomer(from,to){let a=from.path,b=to.path;if(!a||!b)return null;return [...a].reverse().concat(b.slice(1))}
-function renderRelation(){let from=resolvePerson(document.getElementById('relationFromConfirm').value),to=resolvePerson(document.getElementById('relationTo').value);if(!from||!to){toast('בחרו שני אנשים מהרשימה');return}if(from.name===to.name){toast('בחרו שני אנשים שונים');return}let pair=relationPairs[from.name+'|'+to.name];if(!pair){let path=from.name==='תומר כהן'?to.path:to.name==='תומר כהן'?[...from.path].reverse():reversePathFromTomer(from,to);pair={summary:'מצאנו מסלול בין '+from.name+' ל'+to.name,path:path||[from.name,to.name]}}selectedPerson=to;document.getElementById('relationChoose').hidden=true;document.getElementById('relationStep').textContent='שלב 3 מתוך 3';document.getElementById('relDot3').classList.add('on');let box=document.getElementById('path');box.querySelector('.summary').textContent=pair.summary;box.querySelector('.pathline').innerHTML=pair.path.map((n,i)=>`${i?'<i class="connector"></i>':''}<div class="node"><div class="avatar ${i==pair.path.length-1?to.tone:''}">${i==0?from.avatar:n[0]}</div><small>${n}</small></div>`).join('');box.querySelector('p').textContent=pair.path.join(' ← ');box.hidden=false}
+function shortestRelationshipPath(from,to){let queue=[{name:from,path:[from]}],seen=new Set([from]);while(queue.length){let current=queue.shift();if(current.name===to)return current.path;for(let edge of relationshipGraph[current.name]||[]){if(!seen.has(edge.name)){seen.add(edge.name);queue.push({name:edge.name,path:[...current.path,edge.label]})}}}return null}
+function renderRelation(){let from=resolvePerson(document.getElementById('relationFromConfirm').value),to=resolvePerson(document.getElementById('relationTo').value);if(!from||!to){toast('בחרו שני אנשים מהרשימה');return}if(from.name===to.name){toast('בחרו שני אנשים שונים');return}let route=shortestRelationshipPath(from.name,to.name);if(!route){toast('לא נמצא מסלול בין האנשים');return}selectedPerson=to;document.getElementById('relationChoose').hidden=true;document.getElementById('relationStep').textContent='שלב 3 מתוך 3';document.getElementById('relDot3').classList.add('on');let box=document.getElementById('path'),summary=kinshipSummaries[from.name+'|'+to.name]||'מצאנו את המסלול הקצר ביותר';box.querySelector('.summary').textContent=summary;box.querySelector('.pathline').innerHTML=route.map((n,i)=>`${i?'<i class="connector"></i>':''}<div class="node"><div class="avatar ${i==route.length-1?to.tone:''}">${i==0?from.avatar:n.split('—').pop().trim()[0]}</div><small>${n}</small></div>`).join('');box.querySelector('p').textContent=route.join(' ← ');box.hidden=false}
 function openSelectedTree(){show('tree');ensureTreePerson(selectedPerson);centerTree(selectedPerson.name)}
 function selectTreePerson(name){let p=people.find(x=>x.name===name);if(p)selectedPerson=p;centerTree(name)}function ensureTreePerson(p){let found=[...document.querySelectorAll('.person')].find(x=>x.querySelector('small')?.textContent===p.name);if(found)return found;let el=document.createElement('div');el.className='person';el.style.cssText='top:98px;right:18px';el.onclick=()=>selectTreePerson(p.name);el.innerHTML='<div class="avatar '+(p.tone==='verified'?'':p.tone)+'">'+p.avatar+'</div><small>'+p.name+'</small>';document.querySelector('.tree').append(el);return el}
 function openAdd(){document.getElementById('addRelationLabel').textContent='מה הקשר ל'+selectedPerson.name+'?';document.getElementById('add').classList.add('open')}
