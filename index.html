@@ -39,11 +39,11 @@ const people=[
 {name:'איתי כהן',nick:'איתי',meta:'בנו של יוסי',avatar:'א',tone:'lilac',city:'חיפה',relation:'איתי הוא בן דודך',path:['אתה','אמא שלך','יוסי','איתי']}
 ];
 const personRelations={
-'תומר כהן':[['אמא','איילת כהן'],['דוד','יוסי כהן'],['דודה','רחל כהן']],
+'תומר כהן':[['אמא','איילת כהן'],['דוד','יוסי כהן'],['דודה','מיכל אברהם'],['דודה דרך זוגיות','רחל כהן']],
 'יוסי כהן':[['אמא','שרה כהן'],['אבא','יצחק כהן'],['בת זוג','רחל כהן'],['בת זוג לשעבר','דנה לוי · 1989–2004'],['בת','נועה כהן'],['בן','עומר כהן'],['בן','איתי כהן'],['אחות','איילת כהן'],['אחות למחצה','מיכל אברהם']],
 'רחל כהן':[['אמא','מרים לוי'],['אבא','דוד לוי'],['בן זוג','יוסי כהן'],['בת','נועה כהן'],['בן','עומר כהן'],['אחיין','תומר כהן']],
 'איילת כהן':[['אמא','שרה כהן'],['אבא','יצחק כהן'],['אח','יוסי כהן'],['אחות למחצה','מיכל אברהם'],['בן','תומר כהן'],['גיסה','רחל כהן']],
-'מיכל אברהם':[['אמא','מרים אברהם'],['אבא','יצחק כהן'],['אח למחצה','יוסי כהן'],['אחות למחצה','איילת כהן'],['גיסה','רחל כהן']],
+'מיכל אברהם':[['אמא','מרים אברהם'],['אבא','יצחק כהן'],['אח למחצה','יוסי כהן'],['אחות למחצה','איילת כהן'],['אחיין','תומר כהן'],['גיסה','רחל כהן']],
 'שרה כהן':[['בן זוג','יצחק כהן'],['בן','יוסי כהן'],['בת','איילת כהן']],
 'יצחק כהן':[['בת זוג','שרה כהן'],['בת זוג לשעבר','מרים אברהם'],['בן','יוסי כהן'],['בת','איילת כהן'],['בת','מיכל אברהם']],
 'נועה כהן':[['אמא','רחל כהן'],['אבא','יוסי כהן'],['אח','עומר כהן'],['אח למחצה','איתי כהן']],
@@ -75,6 +75,7 @@ function connect(a,b,aToB,bToA){(relationshipGraph[a]??=[]).push({name:b,label:a
 connect('רחל כהן','יוסי כהן','בן זוגה — יוסי כהן','בת זוגו — רחל כהן');
 connect('יוסי כהן','איילת כהן','אחותו — איילת כהן','אחיה — יוסי כהן');
 connect('יוסי כהן','מיכל אברהם','אחותו למחצה — מיכל אברהם','אחיה למחצה — יוסי כהן');
+connect('איילת כהן','מיכל אברהם','אחותה למחצה — מיכל אברהם','אחותה למחצה — איילת כהן');
 connect('איילת כהן','תומר כהן','בנה — תומר כהן','אמו — איילת כהן');
 connect('שרה כהן','יוסי כהן','בנה — יוסי כהן','אמו — שרה כהן');
 connect('שרה כהן','איילת כהן','בתה — איילת כהן','אמה — שרה כהן');
@@ -96,7 +97,8 @@ const kinshipSummaries={
 'רחל כהן|מיכל אברהם':'רחל ומיכל הן גיסות','מיכל אברהם|רחל כהן':'מיכל ורחל הן גיסות',
 'איילת כהן|יוסי כהן':'יוסי הוא אחיה של איילת','יוסי כהן|איילת כהן':'איילת היא אחותו של יוסי',
 'רחל כהן|יוסי כהן':'יוסי הוא בן הזוג של רחל','יוסי כהן|רחל כהן':'רחל היא בת הזוג של יוסי',
-'תומר כהן|איילת כהן':'איילת היא אמא של תומר','איילת כהן|תומר כהן':'תומר הוא הבן של איילת'
+'תומר כהן|איילת כהן':'איילת היא אמא של תומר','איילת כהן|תומר כהן':'תומר הוא הבן של איילת',
+'תומר כהן|מיכל אברהם':'מיכל היא דודה של תומר','מיכל אברהם|תומר כהן':'תומר הוא אחיין של מיכל'
 };
 function shortestRelationshipPath(from,to){let queue=[{name:from,path:[{name:from,label:from}]}],seen=new Set([from]);while(queue.length){let current=queue.shift();if(current.name===to)return current.path;for(let edge of relationshipGraph[current.name]||[]){if(!seen.has(edge.name)){seen.add(edge.name);queue.push({name:edge.name,path:[...current.path,{name:edge.name,label:edge.label}]})}}}return null}
 function renderRelation(){let from=resolvePerson(document.getElementById('relationFromConfirm').value),to=resolvePerson(document.getElementById('relationTo').value);if(!from||!to){toast('בחרו שני אנשים מהרשימה');return}if(from.name===to.name){toast('בחרו שני אנשים שונים');return}let route=shortestRelationshipPath(from.name,to.name);if(!route){toast('לא נמצא מסלול בין האנשים');return}selectedPerson=to;document.getElementById('relationChoose').hidden=true;document.getElementById('relationStep').textContent='שלב 3 מתוך 3';document.getElementById('relDot3').classList.add('on');let box=document.getElementById('path'),summary=kinshipSummaries[from.name+'|'+to.name]||'מצאנו את המסלול הקצר ביותר';box.querySelector('.summary').textContent=summary;box.querySelector('.pathline').innerHTML=route.map((step,i)=>`${i?'<i class="connector"></i>':''}<button class="node personLink" data-person="${step.name}" onclick="openPerson(this.dataset.person)"><span class="avatar ${i==route.length-1?to.tone:''}">${i==0?from.avatar:step.name[0]}</span><small>${step.label}</small></button>`).join('');box.querySelector('p').innerHTML=route.map(step=>'<button class="personLink" data-person="'+step.name+'" onclick="openPerson(this.dataset.person)">'+step.label+'</button>').join(' ← ');box.hidden=false}
