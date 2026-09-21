@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="96 88 240 270" role="img" aria-labelledby="title">
+  <title id="title">סמל שושלת - שי״ן עם שורשים</title>
+  <g fill="none" stroke="#085E45" stroke-linecap="round">
+    <path d="M215 300 L192 338 M215 300 L215 342 M215 300 L238 338" stroke-width="15"/>
+    <path d="M215 300 C262 258 290 208 296 124 M215 300 C222 252 220 206 212 162 M215 300 C182 272 152 250 132 214" stroke-width="32"/>
+    <path d="M296 124 L280 96 M296 124 L316 100 M212 162 L196 138 M212 162 L230 140" stroke-width="18"/>
+  </g>
+</svg>
