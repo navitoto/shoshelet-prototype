@@ -86,7 +86,7 @@ async function startOnboarding(personId=null){
  let query=sb.from('identity_claims').select('person_id').eq('user_id',session.user.id).eq('status','verified');if(personId)query=query.eq('person_id',personId);
  let{data:claims,error:ce}=await query.order('created_at',{ascending:false}).limit(1);if(ce||!claims?.length)return failError('טעינת הכרטיס שלכם לא הושלמה.',ce);
  let{data:person,error:pe}=await sb.from('people').select('*').eq('id',claims[0].person_id).single();if(pe||!person)return failError('טעינת הכרטיס שלכם לא הושלמה.',pe);
- onboardingPerson=person;identityAvatar($('#hugAvatar'),person);let female=person.gender==='female',male=person.gender==='male';
+ onboardingPerson=person;identityAvatar($('#hugAvatar'),{...person,avatar_url:person.avatar_url||session.user.user_metadata?.avatar_url||session.user.user_metadata?.picture});let female=person.gender==='female',male=person.gender==='male';
  $('#hugTitle').textContent=`${female?'ברוכה הבאה':male?'ברוך הבא':'ברוכים הבאים'}, ${person.full_name}`;
  $('#hugLead').textContent=female||male?'הגעת למקום הנכון. זה הכרטיס שלך, והוא מחובר לעץ של המשפחה.':'הגעתם למקום הנכון. זה הכרטיס שלכם, והוא מחובר לעץ של המשפחה.';
  $('#onboardingTagline').value=person.tagline||'';$('#storyError').classList.add('hidden');$('#openSettings').classList.add('hidden');show('onboardingHug');
