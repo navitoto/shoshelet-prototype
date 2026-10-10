@@ -28,7 +28,7 @@ const unitW=n=>n*C.NODE_W+(n-1)*C.COUPLE_GAP;
 
 /* ---------- layout ---------- */
 function layout(model,rootId,opts){
-  opts=opts||{};const expanded=opts.expanded||new Set();
+  opts=opts||{};const expanded=opts.expanded||new Set();const UPMAX=C.UP+Math.max(0,opts.extraUp|0),DOWNMAX=C.DOWN+Math.max(0,opts.extraDown|0);let truncUp=false,truncDown=false;
   const M=model,nodes=[],lines=[],hearts=[],groups=[];
   const root=M.byId.get(rootId);if(!root)return null;
   const seen=new Set();
@@ -39,10 +39,11 @@ function layout(model,rootId,opts){
     const kids=[];const ks=new Set();
     for(const x of persons)for(const k of M.childrenOf(x))if(!ks.has(k)&&!ctxSeen.has(k)){ks.add(k);kids.push(k)}
     const sub={persons,depth,kids:[],collapsed:null,w:unitW(persons.length)};
-    if(depth<C.DOWN&&kids.length){
+    if(depth>=DOWNMAX&&kids.length)truncDown=true;
+    if(depth<DOWNMAX&&kids.length){
       const key='g'+pid+'@'+depth;
       if(kids.length>C.COLLAPSE_ABOVE&&!expanded.has(key)){
-        sub.collapsed={key,count:kids.length,label:kids.length+(depth===0?' ילדים':' נכדים')};
+        sub.collapsed={key,count:kids.length,label:kids.length+(depth===0?' ילדים':depth===1?' נכדים':' צאצאים')};
         sub.kidsW=C.NODE_W;
       }else{
         kids.forEach(k=>ctxSeen.add(k));
@@ -66,24 +67,40 @@ function layout(model,rootId,opts){
   const g0W=g0.reduce((s,x)=>s+x.w,0)+C.GAP*(g0.length-1);
   let x=0;g0.forEach(s=>{s.x=x;x+=s.w+C.GAP});
   const g0Center=g0W/2;
-  // --- ancestors ---
-  const pids=M.parentsOf(rootId).slice(0,C.UP===0?0:4);
-  const par=pids.map(pid=>{const gps=C.UP>=2?M.parentsOf(pid).slice(0,4):[];const gw=gps.length?unitW(gps.length):0;return{pid,gps,slotW:Math.max(C.NODE_W,gw)}});
+  // --- ancestors (generic depth: up to UPMAX generations above the root) ---
+  const ancSeen=new Set([rootId,...ctxSeen]);
+  function ancSlot(pid,lvl){ // lvl = generation above root of pid (1 = parent)
+    let ps=M.parentsOf(pid).filter(x=>!ancSeen.has(x)).slice(0,4);
+    if(!ps.length)return{pid,lvl,ps:[],slotW:C.NODE_W};
+    if(lvl>=UPMAX){truncUp=true;return{pid,lvl,ps:[],slotW:C.NODE_W}}
+    ps.forEach(x=>ancSeen.add(x));
+    const subs=ps.map(x=>ancSlot(x,lvl+1));
+    const w=subs.reduce((t,q)=>t+q.slotW,0)+C.COUPLE_GAP*(subs.length-1);
+    return{pid,lvl,ps:subs,slotW:Math.max(C.NODE_W,w),unitW:w};
+  }
+  const pids0=M.parentsOf(rootId).filter(x=>!ancSeen.has(x)).slice(0,UPMAX===0?0:4);
+  pids0.forEach(x=>ancSeen.add(x));
+  const par=pids0.map(pid=>ancSlot(pid,1));
   const parW=par.reduce((s,p)=>s+p.slotW,0)+C.GAP*Math.max(0,par.length-1);
   let px=g0Center-parW/2;par.forEach(p=>{p.x=px;p.cx=px+p.slotW/2;px+=p.slotW+C.GAP});
-  const hasGP=par.some(p=>p.gps.length),hasP=par.length>0;
-  const minGen=hasGP?-2:hasP?-1:0;
+  const pids=pids0;
+  let maxLvl=par.length?1:0;(function walk(q){q.forEach(x=>{maxLvl=Math.max(maxLvl,x.lvl);walk(x.ps)})})(par);
+  const minGen=-maxLvl;
   const rowY=g=>C.PAD+(g-minGen)*(C.NODE_H+C.ROW_GAP);
   const addNode=(id,cx,gen,extra)=>{const n=Object.assign({id,x:cx-C.NODE_W/2,y:rowY(gen),w:C.NODE_W,h:C.NODE_H,gen},extra||{});nodes.push(n);return n};
   const curve=(sx,sy,tx,ty)=>lines.push({curve:true,pts:[[sx,sy],[tx,ty]]});const bot=n=>[n.x+n.w/2,n.y+n.h];
   const couple=(ns,ended)=>{for(let i=0;i<ns.length-1;i++){const a=ns[i],b=ns[i+1],y=a.y+a.h/2;lines.push({pts:[[a.x+a.w,y],[b.x,y]],dashed:!!ended});if(!ended)hearts.push({x:(a.x+a.w+b.x)/2,y})}};
   const unitCenterOf=ns=>(ns[0].x+ns[ns.length-1].x+ns[ns.length-1].w)/2;
   // place ancestors
-  const parentNodes=new Map();
-  par.forEach(p=>{const n=addNode(p.pid,p.cx,-1,{ancestor:true});parentNodes.set(p.pid,n);
-    if(p.gps.length){const w=unitW(p.gps.length);let gx=p.cx-w/2;const gn=p.gps.map(g=>{const nn=addNode(g,gx+C.NODE_W/2,-2,{ancestor:true});gx+=C.NODE_W+C.COUPLE_GAP;return nn});
+  const parentNodes=new Map();const ancTags=[];
+  function placeAnc(q,cx){
+    const n=addNode(q.pid,cx,-q.lvl,{ancestor:true});parentNodes.set(q.pid,n);
+    if(q.ps.length){let gx=cx-q.unitW/2;const gn=q.ps.map(sub=>{const c=gx+sub.slotW/2;gx+=sub.slotW+C.COUPLE_GAP;return placeAnc(sub,c)});
       couple(gn,gn.length===2&&!M.activeSpouses(gn[0].id).includes(gn[1].id));
-      gn.forEach(g2=>{const b=bot(g2);curve(b[0],b[1],p.cx,n.y)})}});
+      gn.forEach(g2=>{const b=bot(g2);curve(b[0],b[1],cx,n.y)});ancTags.push({pid:q.pid,node:n})}
+    return n;
+  }
+  par.forEach(p=>placeAnc(p,p.cx));
   // couple lines between adjacent parents that have a union (ended -> dashed, no heart)
   for(let i=0;i<par.length-1;i++){const u=M.anyUnion(par[i].pid,par[i+1].pid);if(u){const a=parentNodes.get(par[i].pid),b=parentNodes.get(par[i+1].pid);couple([a,b],u.status!=='active')}}
   // parent source point for a child with given parent set
@@ -120,7 +137,7 @@ function layout(model,rootId,opts){
   // "ההורים של X" tags on the connector gap above each parent unit
   const tags=[];const nm=id=>M.byId.get(id).full_name;
   if(par.length){const f=parentNodes.get(par[0].pid),l=parentNodes.get(par[par.length-1].pid);tags.push({x:(f.x+l.x+l.w)/2,y:f.y+f.h+C.ROW_GAP*0.5,text:'ההורים של '+nm(rootId)})}
-  par.forEach(p=>{if(p.gps.length){const n=parentNodes.get(p.pid);tags.push({x:n.x+n.w/2,y:n.y-C.ROW_GAP*0.5,text:'ההורים של '+nm(p.pid)})}});
+  ancTags.forEach(t=>{const n=t.node;tags.push({x:n.x+n.w/2,y:n.y-C.ROW_GAP*0.5,text:'ההורים של '+nm(t.pid)})});
   // bounds
   let minX=Infinity,maxX=-Infinity,maxY=0;
   nodes.concat(groups.filter(g=>!g.hidden)).forEach(n=>{minX=Math.min(minX,n.x);maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h)});
@@ -131,7 +148,7 @@ function layout(model,rootId,opts){
   const rows={};nodes.forEach(n=>(rows[n.gen]=rows[n.gen]||[]).push(n));
   for(const g in rows){const r=rows[g].slice().sort((a,b)=>a.x-b.x);for(let i=1;i<r.length;i++)if(r[i].x<r[i-1].x+r[i-1].w-0.5)issues.push('overlap gen '+g+': '+r[i-1].id+' / '+r[i].id)}
   const ids=nodes.map(n=>n.id);if(new Set(ids).size!==ids.length)issues.push('duplicate person node');
-  return{W,H,nodes,tags,lines,hearts,groups:groups.filter(g=>!g.hidden),rootId,issues,collapsibleKeys:rootSub.expandedKey?[rootSub.expandedKey]:[]};
+  return{W,H,nodes,tags,lines,hearts,groups:groups.filter(g=>!g.hidden),rootId,issues,moreUp:truncUp,moreDown:truncDown,collapsibleKeys:rootSub.expandedKey?[rootSub.expandedKey]:[]};
 }
 
 /* ---------- render (DOM) ---------- */
@@ -173,25 +190,36 @@ const CSS=`.tv-tag{position:absolute;transform:translate(-50%,-50%);white-space:
 .tv-node.root .tv-av{background:#ffffff2e!important;color:#F7F4EB}
 .tv-name{display:flex;flex-direction:column;min-width:0;width:100%;line-height:1.15;align-items:center}.tv-name b{font-size:11.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}.tv-name small{font-size:10px;color:#78867f;margin-top:2px}
 .tv-group{justify-content:center;gap:2px;background:#f1ecdc;border-style:dashed}.tv-group b{font-size:13px}.tv-group small{font-size:10px;color:#78867f}
+.tv-gen{display:flex;justify-content:center;margin:8px 0}.tv-gen button{min-height:38px;padding:0 18px;border:1px solid #085E45;background:#fffdfa;color:#085E45;border-radius:12px;font:inherit;font-weight:800;font-size:14px}.tv-gen button[hidden]{display:none}
 .tv-btns{display:flex;justify-content:space-between;gap:10px;margin:10px 0}.tv-btns button{flex:1;min-height:40px;border:1px solid #085E45;background:#fffdfa;color:#085E45;border-radius:12px;font:inherit;font-weight:800;font-size:14px}.tv-btns button:disabled{opacity:.35}`;
 
 function mount(el,model,rootId,opts){
-  opts=opts||{};const expanded=new Set();let last;
+  opts=opts||{};const expanded=new Set();let last;const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
   if(!document.getElementById('tv-css')){const s=document.createElement('style');s.id='tv-css';s.textContent=CSS;document.head.appendChild(s)}
-  el.innerHTML='<div class="tv-wrap"><div class="tv-scroll"></div><div class="tv-btns"><button type="button" data-tv-dir="back">חזרה</button><button type="button" data-tv-dir="more">המשך העץ</button></div></div>';
+  el.innerHTML='<div class="tv-wrap"><div class="tv-gen"><button type="button" data-tv-gen="up">עוד דור ↑</button></div><div class="tv-scroll"></div><div class="tv-gen"><button type="button" data-tv-gen="down">עוד דור ↓</button></div><div class="tv-btns"><button type="button" data-tv-dir="back">חזרה</button><button type="button" data-tv-dir="more">המשך העץ</button></div></div>';
   const sc=el.querySelector('.tv-scroll');
   function paint(keepScroll){
-    const prev=sc.scrollLeft;last=layout(model,rootId,{expanded});sc.innerHTML=html(model,last);
+    const prev=sc.scrollLeft;last=layout(model,rootId,{expanded,extraUp:ex.up,extraDown:ex.down});sc.innerHTML=html(model,last);
     sc.querySelectorAll('[data-tv-group]').forEach(b=>b.onclick=()=>{expanded.add(b.dataset.tvGroup);paint(true)});
     sc.querySelectorAll('[data-tv-person]').forEach(b=>b.onclick=()=>opts.onPerson&&opts.onPerson(b.dataset.tvPerson));
     if(keepScroll)sc.scrollLeft=prev;else{const r=sc.querySelector('.root');if(r){const max=sc.scrollWidth-sc.clientWidth,c=r.offsetLeft+r.offsetWidth/2;sc.scrollLeft=Math.min(0,Math.max(-max,Math.min(max,Math.max(0,c-sc.clientWidth/2))-max))}}
+    el.querySelector('[data-tv-gen=up]').hidden=!last.moreUp;el.querySelector('[data-tv-gen=down]').hidden=!last.moreDown;
     upd();
   }
+  function grow(dir){
+    const r0=sc.querySelector('.root'),b0=r0&&r0.getBoundingClientRect();
+    if(dir==='up')ex.up++;else ex.down++;
+    paint(true);
+    const r1=sc.querySelector('.root');
+    if(b0&&r1){const b1=r1.getBoundingClientRect();try{window.scrollBy(0,b1.top-b0.top);sc.scrollLeft+=b1.left-b0.left}catch(e){}}
+    upd();if(opts.onExtra)try{opts.onExtra({up:ex.up,down:ex.down})}catch(e){}
+  }
+  el.querySelectorAll('[data-tv-gen]').forEach(b=>b.onclick=()=>grow(b.dataset.tvGen));
   const upd=()=>{const max=sc.scrollWidth-sc.clientWidth,pos=Math.abs(sc.scrollLeft);el.querySelector('[data-tv-dir=more]').disabled=max<=2||pos>=max-2;el.querySelector('[data-tv-dir=back]').disabled=max<=2||pos<=2};
   sc.addEventListener('scroll',upd);
   el.querySelector('[data-tv-dir=more]').onclick=()=>sc.scrollBy({left:-sc.clientWidth*0.7,behavior:'smooth'});
   el.querySelector('[data-tv-dir=back]').onclick=()=>sc.scrollBy({left:sc.clientWidth*0.7,behavior:'smooth'});
-  paint(false);return{get layout(){return last},repaint:paint,expanded};
+  paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex};
 }
 
 const api={C,makeModel,layout,html,mount};
