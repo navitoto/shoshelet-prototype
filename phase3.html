@@ -276,7 +276,7 @@ const LAND_HINT_KEY='shoshelet:landscape-hint-dismissed';
 let landImmersive=false,landImmersiveSuppressed=false;
 function treeScreenActive(){return $('#tree').classList.contains('on')&&treeMode==='tree'}
 function maybeShowLandHint(){const h=$('#landHint');if(!h)return;let show=false;try{show=treeScreenActive()&&coarseMQ.matches&&!landMQ.matches&&!localStorage.getItem(LAND_HINT_KEY)}catch(e){}h.hidden=!show}
-function evalLandImmersive(){const want=treeScreenActive()&&coarseMQ.matches&&landMQ.matches&&!landImmersiveSuppressed;if(want===landImmersive)return;landImmersive=want;document.body.classList.toggle('immersive-landscape',want);$('#exitImmersive').hidden=!want;if(window.tvHandle&&window.tvHandle.setImmersive)window.tvHandle.setImmersive(want)}
+function evalLandImmersive(){const want=treeScreenActive()&&coarseMQ.matches&&landMQ.matches&&!landImmersiveSuppressed;if(want===landImmersive&&(!want||(window.tvHandle&&window.tvHandle.immersive)))return;landImmersive=want;document.body.classList.toggle('immersive-landscape',want);$('#exitImmersive').hidden=!want;if(window.tvHandle&&window.tvHandle.setImmersive)window.tvHandle.setImmersive(want)}
 landMQ.addEventListener('change',()=>{if(!landMQ.matches)landImmersiveSuppressed=false;evalLandImmersive();maybeShowLandHint()});
 $('#landHintOk').onclick=()=>{try{localStorage.setItem(LAND_HINT_KEY,'1')}catch(e){}$('#landHint').hidden=true};
 $('#exitImmersive').onclick=()=>{landImmersiveSuppressed=true;evalLandImmersive()};
