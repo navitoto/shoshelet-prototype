@@ -178,10 +178,6 @@ function layout(model,rootId,opts){
   // bounds
   let minX=Infinity,maxX=-Infinity,maxY=0;
   nodes.concat(groups.filter(g=>!g.hidden),unclesChip?[{x:unclesChip.x-unclesChip.w/2,y:unclesChip.y,w:unclesChip.w,h:unclesChip.h}]:[]).forEach(n=>{minX=Math.min(minX,n.x);maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h)});
-  // Balance the canvas around its root anchor. This leaves harmless space on
-  // the shorter side and keeps the root still even when no scroll is possible.
-  const anchor=rootNode.x+rootNode.w/2,extent=Math.max(anchor-minX,maxX-anchor);
-  minX=anchor-extent;maxX=anchor+extent;
   const shift=C.PAD-minX,W=maxX-minX+2*C.PAD,H=maxY+C.PAD;
   if(unclesChip)unclesChip.x+=shift;
   nodes.forEach(n=>n.x+=shift);tags.forEach(t=>t.x+=shift);groups.forEach(n=>n.x+=shift);hearts.forEach(h=>h.x+=shift);lines.forEach(l=>l.pts.forEach(p=>p[0]+=shift));
@@ -248,7 +244,7 @@ function mount(el,model,rootId,opts){
     sc.querySelectorAll('[data-tv-group]').forEach(b=>b.onclick=()=>{expanded.add(b.dataset.tvGroup);paint(true)});
     const chip=sc.querySelector('[data-tv-uncles]');if(chip)chip.onclick=()=>{anchorChange(()=>{unclesOpen=!unclesOpen});if(opts.onUncles)opts.onUncles(unclesOpen)};
     sc.querySelectorAll('[data-tv-person]').forEach(b=>b.onclick=()=>opts.onPerson&&opts.onPerson(b.dataset.tvPerson));
-    if(keepScroll)sc.scrollLeft=prev;else sc.scrollLeft=-(sc.scrollWidth-sc.clientWidth)/2;
+    if(keepScroll)sc.scrollLeft=prev;else{const r=sc.querySelector('.root');if(r){const max=sc.scrollWidth-sc.clientWidth,c=r.offsetLeft+r.offsetWidth/2;sc.scrollLeft=Math.min(0,Math.max(-max,Math.min(max,Math.max(0,c-sc.clientWidth/2))-max))}else sc.scrollLeft=-(sc.scrollWidth-sc.clientWidth)/2}
     el.querySelector('[data-tv-gen=up]').hidden=!last.moreUp;el.querySelector('[data-tv-gen=down]').hidden=!last.moreDown;
     upd();
   }
