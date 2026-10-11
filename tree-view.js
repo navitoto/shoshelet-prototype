@@ -231,10 +231,15 @@ const CSS=`.tv-uncles{box-sizing:border-box;position:absolute;z-index:2;directio
 .tv-name{display:flex;flex-direction:column;min-width:0;width:100%;line-height:1.15;align-items:center}.tv-name b{font-size:11.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}.tv-name small{font-size:10px;color:#78867f;margin-top:2px}
 .tv-group{justify-content:center;gap:2px;background:#f1ecdc;border-style:dashed}.tv-group b{font-size:13px}.tv-group small{font-size:10px;color:#78867f}
 .tv-gen{display:flex;justify-content:center;margin:8px 0}.tv-gen button{min-height:38px;padding:0 18px;border:1px solid #085E45;background:#fffdfa;color:#085E45;border-radius:12px;font:inherit;font-weight:800;font-size:14px}.tv-gen button[hidden]{display:none}
-.tv-btns{display:flex;justify-content:space-between;gap:10px;margin:10px 0}.tv-btns button{flex:1;min-height:40px;border:1px solid #085E45;background:#fffdfa;color:#085E45;border-radius:12px;font:inherit;font-weight:800;font-size:14px}.tv-btns button:disabled{opacity:.35}`;
+.tv-btns{display:flex;justify-content:space-between;gap:10px;margin:10px 0}.tv-btns button{flex:1;min-height:40px;border:1px solid #085E45;background:#fffdfa;color:#085E45;border-radius:12px;font:inherit;font-weight:800;font-size:14px}.tv-btns button:disabled{opacity:.35}
+.tv-wrap.tv-immersive .tv-scroll{overflow-y:auto;height:100dvh;border:0;border-radius:0;padding:0}
+.tv-wrap.tv-immersive .tv-gen,.tv-wrap.tv-immersive .tv-btns{display:none}
+.tv-dock{position:fixed;right:calc(10px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.tv-dock button{display:flex;align-items:center;gap:5px;background:rgba(255,253,250,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #C7C1B2;color:#085E45;font:inherit;font-weight:700;font-size:12px;padding:8px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(8,94,69,.18);min-height:0;cursor:pointer}
+.tv-dock button[hidden]{display:none}.tv-dock button:disabled{opacity:.35}`;
 
 function mount(el,model,rootId,opts){
-  opts=opts||{};const expanded=new Set();let last;let unclesOpen=opts.unclesOpen===true;const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
+  opts=opts||{};const expanded=new Set();let last;let unclesOpen=opts.unclesOpen===true;let immersiveMode=false,dock=null;const dockHomes=new Map();const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
   if(!document.getElementById('tv-css')){const s=document.createElement('style');s.id='tv-css';s.textContent=CSS;document.head.appendChild(s)}
   el.innerHTML='<div class="tv-wrap"><div class="tv-gen"><button type="button" data-tv-gen="up">עוד דור ↑</button></div><div class="tv-scroll"></div><div class="tv-gen"><button type="button" data-tv-gen="down">עוד דור ↓</button></div><div class="tv-btns"><button type="button" data-tv-dir="back">חזרה</button><button type="button" data-tv-dir="more">המשך העץ</button></div></div>';
   const sc=el.querySelector('.tv-scroll');
@@ -245,6 +250,7 @@ function mount(el,model,rootId,opts){
     const chip=sc.querySelector('[data-tv-uncles]');if(chip)chip.onclick=()=>{anchorChange(()=>{unclesOpen=!unclesOpen});if(opts.onUncles)opts.onUncles(unclesOpen)};
     sc.querySelectorAll('[data-tv-person]').forEach(b=>b.onclick=()=>opts.onPerson&&opts.onPerson(b.dataset.tvPerson));
     if(keepScroll)sc.scrollLeft=prev;else{const r=sc.querySelector('.root');if(r){const max=sc.scrollWidth-sc.clientWidth,c=r.offsetLeft+r.offsetWidth/2;sc.scrollLeft=Math.min(0,Math.max(-max,Math.min(max,Math.max(0,c-sc.clientWidth/2))-max))}else sc.scrollLeft=-(sc.scrollWidth-sc.clientWidth)/2}
+    if(immersiveMode&&!keepScroll){const r=sc.querySelector('.root');if(r)sc.scrollTop=Math.max(0,r.offsetTop+r.offsetHeight/2-sc.clientHeight/2)}
     el.querySelector('[data-tv-gen=up]').hidden=!last.moreUp;el.querySelector('[data-tv-gen=down]').hidden=!last.moreDown;
     upd();
   }
@@ -264,7 +270,23 @@ function mount(el,model,rootId,opts){
   sc.addEventListener('scroll',upd);
   el.querySelector('[data-tv-dir=more]').onclick=()=>sc.scrollBy({left:-sc.clientWidth*0.7,behavior:'smooth'});
   el.querySelector('[data-tv-dir=back]').onclick=()=>sc.scrollBy({left:sc.clientWidth*0.7,behavior:'smooth'});
-  paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex,get unclesOpen(){return unclesOpen}};
+  const genUp=el.querySelector('[data-tv-gen=up]'),genDn=el.querySelector('[data-tv-gen=down]'),dirMore=el.querySelector('[data-tv-dir=more]'),dirBack=el.querySelector('[data-tv-dir=back]');
+  function setImmersive(on){
+    on=!!on;if(on===immersiveMode&&dock===null&&!on)return;immersiveMode=on;
+    el.querySelector('.tv-wrap').classList.toggle('tv-immersive',on);
+    const btns=[genUp,genDn,dirMore,dirBack];
+    if(on){
+      if(!dock){dock=document.createElement('div');dock.className='tv-dock';
+        btns.forEach(b=>{dockHomes.set(b,{p:b.parentElement,next:b.nextSibling});dock.appendChild(b)});
+        el.querySelector('.tv-wrap').appendChild(dock)}
+      genUp.textContent='עוד דור למעלה ↑';genDn.textContent='עוד דור למטה ↓';
+    }else{
+      if(dock){btns.forEach(b=>{const h=dockHomes.get(b);if(h)h.p.insertBefore(b,h.next)});dockHomes.clear();dock.remove();dock=null}
+      genUp.textContent='עוד דור ↑';genDn.textContent='עוד דור ↓';
+    }
+    paint(false);
+  }
+  paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex,get unclesOpen(){return unclesOpen},setImmersive,get immersive(){return immersiveMode}};
 }
 
 const api={C,makeModel,layout,html,mount};
