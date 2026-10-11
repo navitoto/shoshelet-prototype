@@ -184,7 +184,7 @@ const CSS=`.tv-tag{position:absolute;transform:translate(-50%,-50%);white-space:
 .tv-canvas{position:relative;direction:ltr}.tv-canvas svg{position:absolute;left:0;top:0}
 .tv-line{fill:none;stroke:#C9A227;stroke-width:1.7;opacity:.95;stroke-linecap:round;stroke-linejoin:round}.tv-line.dashed{stroke-dasharray:4 4;opacity:.7}.tv-heart{fill:#C9A227;font-size:12px}
 .tv-node{box-sizing:border-box;position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;direction:rtl;background:#fffdfa;border:1px solid #e3dfd0;border-radius:14px;padding:10px 5px 6px;font:inherit;text-align:center;cursor:pointer;color:#0C3B2E;box-shadow:0 2px 6px #0c3b2e14}
-.tv-node.sp{border-style:dashed;background:#f6f3e8;box-shadow:none;transform:scale(.88)}
+.tv-node.sp{border:1px solid #C9A227;background:#F3E9C6;box-shadow:none;transform:scale(.88)}
 .tv-node.root{border:1px solid #0C5A44;background:#0C5A44;color:#F7F4EB}.tv-node.root .tv-name small{color:#cfe3d8}
 .tv-av{flex:none;width:36px;height:36px;border-radius:50%;color:#0C5A44;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800}
 .tv-node.root .tv-av{background:#ffffff2e!important;color:#F7F4EB}
