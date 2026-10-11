@@ -236,7 +236,10 @@ const CSS=`.tv-uncles{box-sizing:border-box;position:absolute;z-index:2;directio
 .tv-wrap.tv-immersive .tv-gen,.tv-wrap.tv-immersive .tv-btns{display:none}
 .tv-dock{position:fixed;right:calc(10px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .tv-dock button{display:flex;align-items:center;gap:5px;background:rgba(255,253,250,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #C7C1B2;color:#085E45;font:inherit;font-weight:700;font-size:12px;padding:8px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(8,94,69,.18);min-height:0;cursor:pointer}
-.tv-dock button[hidden]{display:none}.tv-dock button:disabled{opacity:.35}`;
+.tv-dock button[hidden]{display:none}.tv-dock button:disabled{opacity:.35}
+.tv-wrap.tv-immersive .tv-btns{display:none}
+.tv-wrap.tv-immersive .tv-scroll{scrollbar-width:none}
+.tv-wrap.tv-immersive .tv-scroll::-webkit-scrollbar{display:none}`;
 
 function mount(el,model,rootId,opts){
   opts=opts||{};const expanded=new Set();let last;let unclesOpen=opts.unclesOpen===true;let immersiveMode=false,dock=null;const dockHomes=new Map();const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
@@ -245,7 +248,7 @@ function mount(el,model,rootId,opts){
   const sc=el.querySelector('.tv-scroll');
   function paint(keepScroll){
     const prev=sc.scrollLeft;last=layout(model,rootId,{expanded,extraUp:ex.up,extraDown:ex.down,unclesOpen});sc.innerHTML=html(model,last);
-    const canvas=sc.querySelector('.tv-canvas');if(last.W<sc.clientWidth)canvas.style.marginRight=(sc.clientWidth-last.W)/2+'px';
+    const canvas=sc.querySelector('.tv-canvas');canvas.style.marginRight=last.W<sc.clientWidth?(sc.clientWidth-last.W)/2+'px':'';
     sc.querySelectorAll('[data-tv-group]').forEach(b=>b.onclick=()=>{expanded.add(b.dataset.tvGroup);paint(true)});
     const chip=sc.querySelector('[data-tv-uncles]');if(chip)chip.onclick=()=>{anchorChange(()=>{unclesOpen=!unclesOpen});if(opts.onUncles)opts.onUncles(unclesOpen)};
     sc.querySelectorAll('[data-tv-person]').forEach(b=>b.onclick=()=>opts.onPerson&&opts.onPerson(b.dataset.tvPerson));
@@ -258,7 +261,7 @@ function mount(el,model,rootId,opts){
     const r0=sc.querySelector('.root'),b0=r0&&r0.getBoundingClientRect();
     change();paint(true);
     const r1=sc.querySelector('.root');
-    if(b0&&r1){const b1=r1.getBoundingClientRect();try{window.scrollBy(0,b1.top-b0.top);sc.scrollLeft+=b1.left-b0.left}catch(e){}}
+    if(b0&&r1){const b1=r1.getBoundingClientRect();try{if(immersiveMode){sc.scrollTop+=b1.top-b0.top}else{window.scrollBy(0,b1.top-b0.top)}sc.scrollLeft+=b1.left-b0.left}catch(e){}}
     upd();
   }
   function grow(dir){
@@ -274,7 +277,7 @@ function mount(el,model,rootId,opts){
   function setImmersive(on){
     on=!!on;if(on===immersiveMode&&dock===null&&!on)return;immersiveMode=on;
     el.querySelector('.tv-wrap').classList.toggle('tv-immersive',on);
-    const btns=[genUp,genDn,dirMore,dirBack];
+    const btns=[genUp,genDn];
     if(on){
       if(!dock){dock=document.createElement('div');dock.className='tv-dock';
         btns.forEach(b=>{dockHomes.set(b,{p:b.parentElement,next:b.nextSibling});dock.appendChild(b)});
