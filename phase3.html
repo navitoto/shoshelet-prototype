@@ -62,7 +62,10 @@
 .photo-dialog{position:fixed;inset:0;z-index:64;background:#082e24a8;display:flex;align-items:center;justify-content:center;padding:20px}.photo-dialog[hidden]{display:none}
 .photo-dialog>div{width:min(360px,100%);background:var(--cream);border-radius:20px;padding:22px 20px;text-align:right}.photo-dialog h2{font-size:19px;margin:0 0 8px}.photo-dialog p{font-size:14px;line-height:1.6;color:#596e62;margin:0 0 16px}.photo-dialog .btn.red{background:#a63a28}.photo-dialog .btn{margin:0 0 10px}
 .profile-header .avatar-wrap{width:78px;height:78px}@media(max-width:380px){.profile-header .avatar-wrap{width:75px;height:75px}}@media(min-width:700px){.profile-header .avatar-wrap{width:185px;height:185px}.avatar-wrap .photo-camera{width:44px;height:44px}}
-.photo-full .btn,.photo-dialog .btn{display:block;width:100%}</style></head><body><main class="app"><header class="top"><span class="brand"><img src="./assets/shoshelet-mark.svg" alt="">שושלת</span><button id="openSettings" class="hidden" aria-label="הגדרות" title="הגדרות">⚙</button></header>
+.photo-full .btn,.photo-dialog .btn{display:block;width:100%}
+
+.trv-install-panel{position:relative;text-align:center;animation:trv-install-up .24s ease-out}.trv-install-panel .trv-install-line{font-size:17px;color:var(--ink);line-height:1.65;margin:0 0 20px;padding:0 9px}.trv-install-panel .trv-install-add{width:100%;min-height:48px;margin:0}.trv-install-close{position:absolute;top:12px;left:12px;width:44px;height:44px;border:0;background:transparent;color:var(--muted);font-size:23px;cursor:pointer}@keyframes trv-install-up{from{transform:translateY(100%)}to{transform:translateY(0)}}@media(prefers-reduced-motion:reduce){.trv-install-panel{animation:none}}
+</style></head><body><main class="app"><header class="top"><span class="brand"><img src="./assets/shoshelet-mark.svg" alt="">שושלת</span><button id="openSettings" class="hidden" aria-label="הגדרות" title="הגדרות">⚙</button></header>
 <section id="gate" class="screen center"><img class="mark" src="./assets/shoshelet-mark.svg" alt="סמל שושלת - שי״ן עם שורשים"><h1>ברוכים הבאים לשושלת</h1><p class="lead">המקום המשפחתי שלכם לגלות מי קשור למי, לשמור סיפורים ולהכיר את המשפחה המורחבת.</p><p id="gateNotice" class="notice hidden" role="status"></p><button class="btn primary" data-go="join">הצטרפו בהזמנה</button><div>או</div><button class="btn" data-go="create">פתחו משפחה חדשה</button><button id="existingLogin" class="link">כבר יש לי משפחה</button><p class="muted">רק בני המשפחה שהצטרפו יכולים לראות את העץ.</p><small id="buildMarker" class="muted">גרסה 2026.10.08-0005</small><a class="link" href="privacy.html">מדיניות פרטיות</a></section>
 <section id="join" class="screen"><button class="back" data-go="gate">‹</button><div class="onboarding-progress" role="group" aria-label="שלב 1 מתוך 3: התחברות"><div class="onboarding-progress-label"><span>שלב 1 מתוך 3</span><span>התחברות</span></div><div class="onboarding-track" aria-hidden="true"><div class="onboarding-fill" style="width:33.3333%"></div></div></div><h1>הצטרפות למשפחה</h1><label>קוד ההזמנה</label><input id="invite" placeholder="הדביקו כאן את הקוד שקיבלתם"><button id="previewInvite" class="btn primary">בדיקת ההזמנה</button><div id="inviteResult" class="notice hidden"></div><button id="joinGoogle" class="btn primary hidden">המשך עם Google</button></section>
 <section id="claimPerson" class="screen"><button class="back" data-go="join" aria-label="חזרה להזמנה">‹</button><div class="onboarding-progress" role="group" aria-label="שלב 2 מתוך 3: הכרטיס שלכם"><div class="onboarding-progress-label"><span>שלב 2 מתוך 3</span><span>הכרטיס שלכם</span></div><div class="onboarding-track" aria-hidden="true"><div class="onboarding-fill" style="width:66.6667%"></div></div></div><h1>בחרו את הכרטיס שלכם</h1><p id="claimIntro" class="lead"></p><label for="claimSearch">חיפוש לפי שם</label><input id="claimSearch" autocomplete="off" placeholder="הקלידו שם"><div id="claimPeople" aria-live="polite"></div><p id="claimSelection" class="notice hidden"></p><button id="confirmClaim" type="button" class="btn primary" disabled>זה אני, להצטרף למשפחה</button><p id="claimError" class="notice hidden" role="alert"></p></section>
@@ -305,7 +308,7 @@ function offerSiblingParent(addedParent,candidates,uid){let modal=$('#siblingPar
 function offerParentUnion(addedParent,firstParent,uid,siblingCandidates=[]){let modal=$('#parentUnionPrompt');$('#parentUnionQuestion').textContent=`להוסיף את ${addedParent.full_name} גם כבן/בת זוג של ${firstParent.full_name}?`;modal.classList.add('open');let finish=async()=>{modal.classList.remove('open');if(siblingCandidates.length)return offerSiblingParent(addedParent,siblingCandidates,uid);await load();openPerson(addedParent.id)};$('#declineParentUnion').onclick=finish;$('#confirmParentUnion').onclick=async()=>{let[a,b]=[addedParent.id,firstParent.id].sort(),exists=unions.some(x=>x.person_a===a&&x.person_b===b);if(!exists){let{error}=await sb.from('unions').insert({family_id:familyId,person_a:a,person_b:b,type:'marriage',status:'active',created_by:uid});if(error){modal.classList.remove('open');return failError('קשר הזוגיות לא נשמר.',error)}}toast('נשמר');await finish()}}
 
 // Installation help: automatic once, always available from Settings.
-let deferredInstallPrompt=null,installShown=false,installReturnFocus=null;
+let deferredInstallPrompt=null,installShown=false,installReturnFocus=null,installManualOnly=false;
 const installSheet=$('#installSheet');
 const installed=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const iosDevice=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
@@ -315,8 +318,8 @@ const cleanInstallLink=()=>new URL('./phase3.html',location.href).href;
 function updateInstallSettings(){let isApp=installed();$('#openInstallHelp').hidden=isApp;$('#installedStatus').hidden=!isApp;}
 function installDismiss(){installSheet.hidden=true;document.body.style.overflow='';try{localStorage.setItem('shoshelet-install-choice','dismissed')}catch{}installReturnFocus?.focus();}
 const installShareIcon='<svg viewBox="0 0 40 44" aria-hidden="true"><path d="M10 18H5v23h30V18h-5M20 29V3m-8 8 8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-function installOpen(forceSafari=false){
- updateInstallSettings();if(installed())return;
+function installOpen(forceSafari=false,manualOnly=false){
+ updateInstallSettings();if(installed())return;installManualOnly=manualOnly;
  installReturnFocus=document.activeElement;installShown=true;
  let steps=$('#installSteps'),action=$('#installAction'),later=$('#installLater'),fallback=$('#installSafariFallback'),copy=$('#installCopyFallback');
  steps.hidden=true;steps.replaceChildren();action.hidden=true;action.disabled=false;action.textContent='התקנה';fallback.hidden=true;copy.hidden=true;$('#installCopyStatus').textContent='';
@@ -329,8 +332,8 @@ function installOpen(forceSafari=false){
  steps.innerHTML='<div class="install-step"><b>1</b><span>העתיקו את הקישור.</span></div><div class="install-step"><b>2</b><span>פתחו Safari והדביקו אותו.</span></div>';steps.hidden=false;action.textContent='העתקת קישור';action.hidden=false;fallback.hidden=false;later.textContent='לא עכשיו';
  }else{
  $('#installTitle').textContent='שושלת במסך הבית';$('#installDescription').textContent='האייקון יישב במסך הבית, והשושלת תיפתח בנגיעה אחת, בלי לחפש את הקישור.';
- if(androidChrome()&&deferredInstallPrompt){action.hidden=false;later.textContent='לא עכשיו';}
- else{steps.textContent=androidChrome()?'בתפריט Chrome בחרו "התקנת אפליקציה" או "הוספה למסך הבית".':'פתחו את תפריט הדפדפן וחפשו אפשרות להוספה למסך הבית.';steps.hidden=false;later.textContent='הבנתי';}
+ if(!manualOnly&&androidChrome()&&deferredInstallPrompt){action.hidden=false;later.textContent='לא עכשיו';}
+ else{if(androidChrome()){steps.innerHTML='<div class="install-visual"><b>1</b><span>לחצו על ⋮ ב-Chrome</span><div class="install-control" aria-hidden="true" style="font-size:30px">⋮</div></div><div class="install-visual"><b>2</b><span>בחרו</span><div class="install-control install-system-row"><span>הוספה למסך הבית / התקנת אפליקציה</span><span class="install-plus" aria-hidden="true">＋</span></div></div><div class="install-visual"><b>3</b><span>אשרו את ההוספה</span><div class="install-control install-add" aria-hidden="true">✓</div></div>'}else{steps.textContent='פתחו את תפריט הדפדפן וחפשו אפשרות להוספה למסך הבית.'}steps.hidden=false;later.textContent='הבנתי';}
  }
  installSheet.hidden=false;document.body.style.overflow='hidden';later.focus();
 }
@@ -341,9 +344,9 @@ function installMaybe(){
  try{if(localStorage.getItem('shoshelet-install-choice'))return}catch{}
  installOpen();
 }
-addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!installSheet.hidden&&androidChrome()){$('#installSteps').hidden=true;$('#installAction').hidden=false;$('#installAction').textContent='התקנה';$('#installLater').textContent='לא עכשיו';}});
-addEventListener('appinstalled',()=>{deferredInstallPrompt=null;installDismiss();$('#openInstallHelp').hidden=true;$('#installedStatus').hidden=false;$('#installedStatus').textContent='ההתקנה הושלמה. אפשר לפתוח את שושלת ממסך הבית.';});
-matchMedia('(display-mode: standalone)').addEventListener?.('change',updateInstallSettings);
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(!installSheet.hidden&&!installManualOnly&&androidChrome()){$('#installSteps').hidden=true;$('#installAction').hidden=false;$('#installAction').textContent='התקנה';$('#installLater').textContent='לא עכשיו';}});
+addEventListener('appinstalled',()=>{trvInstallMarkInstalled();deferredInstallPrompt=null;installDismiss();$('#openInstallHelp').hidden=true;$('#installedStatus').hidden=false;$('#installedStatus').textContent='ההתקנה הושלמה. אפשר לפתוח את שושלת ממסך הבית.';});
+matchMedia('(display-mode: standalone)').addEventListener?.('change',()=>{updateInstallSettings();if(installed())trvInstallMarkInstalled()});
 $('#openInstallHelp').onclick=()=>installOpen();$('#installLater').onclick=installDismiss;$('#installSafariFallback').onclick=()=>installOpen(true);
 $('#installAction').onclick=async()=>{
  if(iosDevice()){
@@ -351,7 +354,7 @@ $('#installAction').onclick=async()=>{
  catch{$('#installCopyStatus').textContent='העתיקו את הקישור בלחיצה ארוכה.';$('#installCopyLink').value=link;$('#installCopyFallback').hidden=false;$('#installCopyLink').focus();$('#installCopyLink').select();}return;
  }
  if(!deferredInstallPrompt)return installOpen();let prompt=deferredInstallPrompt;deferredInstallPrompt=null;$('#installAction').disabled=true;
- try{await prompt.prompt();let choice=await prompt.userChoice;if(choice.outcome==='accepted')installDismiss();else installOpen();}catch{installOpen();}
+ try{await prompt.prompt();let choice=await prompt.userChoice;if(choice.outcome==='accepted')installDismiss();else installOpen(false,true);}catch{installOpen(false,true);}
 };
 installSheet.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();installDismiss();return;}if(e.key!=='Tab')return;let controls=[...installSheet.querySelectorAll('button,input')].filter(el=>!el.disabled&&el.getClientRects().length);let first=controls[0],last=controls.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
 addEventListener('load',()=>setTimeout(installMaybe,1500));
@@ -405,6 +408,33 @@ async function loadRepairLog(){let {data,error}=await sb.from('activity_log').se
 function repairLogDetails(x){let labels={people:'אדם',parent_child:'קשר הורות',unions:'קשר זוגיות',sibling_declarations:'הצהרת אחאות'},label=labels[x.entity_type]||'פעולה משפחתית',ids=x.person_ids||[],name=id=>byId(id)?.full_name||'שם לא זמין';if(x.entity_type==='parent_child')return [label+' · הורה: '+name(ids[0]),'ילד/ה: '+name(ids[1])];let names=ids.map(name);return [label+' · '+(names.length?names.join(' ו'):'שם לא זמין')]}
 function renderRepairLog(){let id=$('#activityPerson').value,list=repairLog.filter(x=>!id||(x.person_ids||[]).includes(id));$('#activityLogList').innerHTML=list.map(x=>`<div class="card"><span class="sub">${esc(new Date(x.created_at).toLocaleString('he-IL'))}</span><b style="display:block">${esc(x.summary||x.action||'פעולה')}</b><small style="display:block;overflow-wrap:anywhere">${repairLogDetails(x).map(esc).join('<br>')}</small>${x.undoable&&!x.undone_at?`<button type="button" class="btn secondary" data-repair-undo="${esc(x.id)}">בדיקת ביטול</button>`:x.undone_at?'<p class="sub">בוטלה</p>':''}</div>`).join('')||'<div class="empty">אין פעולות להצגה</div>';document.querySelectorAll('[data-repair-undo]').forEach(b=>b.onclick=async()=>{let id=b.dataset.repairUndo;b.disabled=true;try{let preview=await repairPreviewCall('undo',{id});if(preview.allowed!==true||!preview.token){toast(preview.description||'לא ניתן לבטל פעולה זו');return}let summary=preview.description||'הפעולה הזו תבוטל.';if(!confirm(`${summary}
 האם לבטל את הפעולה?`))return;repairPreview={kind:'undo',target:{id},token:preview.token};await commitRepair(b);}catch(e){repairError(e,'לא ניתן לבדוק את הביטול כרגע')}finally{b.disabled=false}})}$('#activityPerson').onchange=renderRepairLog;
+// Trivia install nudge: counters belong to this browser, never to a family account.
+const TRV_INSTALL_KEY='shoshelet-trivia-install-v1';
+function trvInstallRead(){try{let raw=localStorage.getItem(TRV_INSTALL_KEY),s=raw?JSON.parse(raw):{};return {shown:Math.max(0,Number(s.shown)||0),dismissed:Math.max(0,Number(s.dismissed)||0),installed:s.installed===true}}catch{return null}}
+function trvInstallWrite(s){try{localStorage.setItem(TRV_INSTALL_KEY,JSON.stringify(s));return true}catch{return false}}
+let trvInstallReturnFocus=null;
+function trvInstallClose(dismissed=false){let n=document.querySelector('#trvInstallNudge');if(!n)return;if(dismissed){let s=trvInstallRead();if(s){s.dismissed++;trvInstallWrite(s)}}n.remove();document.body.style.overflow='';trvInstallReturnFocus?.focus()}
+function trvInstallMarkInstalled(){let s=trvInstallRead();if(s){s.installed=true;trvInstallWrite(s)}trvInstallClose()}
+async function trvInstallStart(){
+ if(installed()){trvInstallMarkInstalled();return}
+ trvInstallClose();
+ // iOS always uses instructions. A native prompt is used only with a real captured event.
+ if(iosDevice()||!androidChrome()||!deferredInstallPrompt)return installOpen(false,true);
+ let prompt=deferredInstallPrompt;deferredInstallPrompt=null;let button=document.querySelector('#trvInstallAdd');if(button)button.disabled=true;
+ try{await prompt.prompt();let choice=await prompt.userChoice;if(choice.outcome!=='accepted')installOpen(false,true)}catch{installOpen(false,true)}finally{if(button)button.disabled=false}
+}
+function trvInstallNudge(e){
+ if(installed()){trvInstallMarkInstalled();return}
+ let s=trvInstallRead();if(!s||s.installed||s.shown>=3||s.dismissed>=2)return;
+ s.shown++;if(!trvInstallWrite(s))return; // Without storage, fail closed rather than nag after reload.
+ let n=document.createElement('div');n.id='trvInstallNudge';n.className='install-sheet';n.setAttribute('role','dialog');n.setAttribute('aria-modal','true');n.setAttribute('aria-labelledby','trvInstallLine');
+ n.innerHTML='<div class="install-panel trv-install-panel"><div class="install-handle" aria-hidden="true"></div><button class="trv-install-close" type="button" aria-label="סגירת הצעת ההתקנה">×</button><img src="./assets/shoshelet-mark.svg" alt="" aria-hidden="true"><p class="trv-install-line" id="trvInstallLine">מחר חוזרים לשושלת בלי לחפש את הקישור.</p><button class="btn primary trv-install-add" id="trvInstallAdd" type="button">הוספה למסך הבית</button></div>';
+ trvInstallReturnFocus=document.activeElement;document.body.appendChild(n);document.body.style.overflow='hidden';
+ n.querySelector('.trv-install-close').onclick=()=>trvInstallClose(true);
+ n.querySelector('#trvInstallAdd').onclick=trvInstallStart;
+ n.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();trvInstallClose(true)}else if(event.key==='Tab'){event.preventDefault();let close=n.querySelector('.trv-install-close'),add=n.querySelector('#trvInstallAdd');(document.activeElement===add?close:add).focus()}});
+ n.querySelector('#trvInstallAdd').focus();
+}
 /* Shoshelet daily trivia tab. Reads only; every write goes through the five trivia_* RPCs. */
 const TRV_TEXT={title:'טריוויה',qOf:(n,t)=>`שאלה ${n} מתוך ${t}`,next:'לשאלה הבאה',report:'משהו לא נכון בשאלה?',right:'התשובה הנכונה: ',yours:'הבחירה שלך: ',doneTitle:'סיימת להיום',doneNote:'יפה! נתראה מחר עם שאלות חדשות',
 /* INVENTED WORDING - needs Tut's approval before publishing */
@@ -418,12 +448,12 @@ async function triviaOpen(){show('trivia');trvStop();let e=trvEl();e.innerHTML='
 function trvError(){trvStop();let e=trvEl();e.innerHTML=`<div class="card center"><p>${esc(TRV_TEXT.err)}</p><button class="btn" id="trvRetry" type="button">${esc(TRV_TEXT.retry)}</button></div>`;e.querySelector('#trvRetry').onclick=triviaOpen}
 function trvHead(right){return `<div class="trv-head"><b>${esc(TRV_TEXT.title)}</b><span>${right}</span></div>`}
 function trvClock(ms){let s=Math.ceil(ms/1000);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
-function trvRender(s){trvState=s;trvStop();let e=trvEl();
+function trvRender(s,justFinished=false){trvInstallClose();trvState=s;trvStop();let e=trvEl();
  if(s.phase==='empty'){e.innerHTML=trvHead('')+`<div class="card"><p>${esc(TRV_TEXT.empty)}</p></div>`;return}
  if(s.phase==='ready'){e.innerHTML=trvHead('')+`<div class="card center"><p>${esc(TRV_TEXT.startNote(s.total,s.seconds))}</p><button class="btn" id="trvStart" type="button">${esc(TRV_TEXT.start)}</button></div>`;e.querySelector('#trvStart').onclick=async()=>{if(trvBusy)return;trvBusy=true;try{trvRender(await trvRpc('trivia_start',{}))}catch(x){trvError()}finally{trvBusy=false}};return}
  if(s.phase==='question')return trvQuestion(s);
- if(s.phase==='feedback')return trvFeedback(s.feedback,s.total,false);
- if(s.phase==='done')return trvDone(s)}
+ if(s.phase==='feedback')return trvFeedback(s.feedback,s.total,s.feedback.idx+1>=s.total);
+ if(s.phase==='done')return trvDone(s,justFinished)}
 function trvQuestion(s){let e=trvEl(),end=performance.now()+s.remaining_ms,total=s.seconds*1000;
  e.innerHTML=trvHead(`<span id="trvQn">${esc(TRV_TEXT.qOf(s.idx+1,s.total))}</span> · <span id="trvClock"></span>`)+`<div class="trv-bar"><i id="trvBar"></i></div><h2 class="trv-q">${esc(s.question.text)}</h2>`+s.question.options.map((o,i)=>`<button class="trv-opt" data-i="${i}" type="button">${esc(o)}</button>`).join('');
  const send=async c=>{if(trvBusy)return;trvBusy=true;trvStop();e.querySelectorAll('.trv-opt').forEach(b=>b.disabled=true);try{let r=await trvRpc('trivia_answer',{p_idx:s.idx,p_choice:c});trvFeedback(r.feedback,s.total,r.last)}catch(x){trvError()}finally{trvBusy=false}};
@@ -432,7 +462,7 @@ function trvQuestion(s){let e=trvEl(),end=performance.now()+s.remaining_ms,total
 function trvFeedback(f,total,last){trvStop();let e=trvEl(),opts=f.options.map((o,i)=>{let cls=i===f.correct_idx?'ok':(i===f.chosen?'bad':'');let mark=i===f.correct_idx?'✓ ':(i===f.chosen?'✗ ':'');return `<div class="trv-opt ${cls}">${mark}${esc(o)}</div>`}).join('');
  let line=f.timed_out?`<p class="center"><b>${esc(TRV_TEXT.timeUp)}</b></p>`:(f.correct?'':`<p class="center muted">${esc(TRV_TEXT.yours)}${esc(f.options[f.chosen])}</p>`);
  e.innerHTML=trvHead(esc(TRV_TEXT.qOf(f.idx+1,total)))+`<h2 class="trv-q">${esc(f.text)}</h2>${opts}${line}<p class="center">${esc(TRV_TEXT.right)}${esc(f.correct_text)}</p><button class="btn" id="trvNext" type="button">${esc(last?TRV_TEXT.doneTitle:TRV_TEXT.next)}</button>${f.reported?`<p class="center muted">${esc(TRV_TEXT.reportThanks)}</p>`:`<button class="trv-report" id="trvReport" type="button">${esc(TRV_TEXT.report)}</button>`}<div id="trvReportBox"></div>`;
- e.querySelector('#trvNext').onclick=async()=>{if(trvBusy)return;trvBusy=true;try{trvRender(last?await trvRpc('trivia_state',{}):await trvRpc('trivia_next',{}))}catch(x){trvError()}finally{trvBusy=false}};
+ e.querySelector('#trvNext').onclick=async()=>{if(trvBusy)return;trvBusy=true;try{trvRender(last?await trvRpc('trivia_state',{}):await trvRpc('trivia_next',{}),last)}catch(x){trvError()}finally{trvBusy=false}};
  let rb=e.querySelector('#trvReport');if(rb)rb.onclick=()=>trvReportMenu(f)}
 function trvReportMenu(f){let box=trvEl().querySelector('#trvReportBox');let ppl=(f.people||[]).map(byId).filter(Boolean);
  box.innerHTML=`<div class="card"><b>${esc(TRV_TEXT.reportAsk)}</b><button class="btn" id="trvWrong" type="button">${esc(TRV_TEXT.reportWrong)}</button><button class="btn" id="trvMissing" type="button">${esc(TRV_TEXT.reportMissing)}</button><button class="link" id="trvCancel" type="button">${esc(TRV_TEXT.cancel)}</button></div>`;
@@ -441,5 +471,5 @@ function trvReportMenu(f){let box=trvEl().querySelector('#trvReportBox');let ppl
  box.querySelector('#trvWrong').onclick=()=>{if(ppl.length<=1)return go(ppl[0]);box.innerHTML=`<div class="card"><b>${esc(TRV_TEXT.reportPick)}</b>`+ppl.map(p=>`<button class="btn" data-p="${esc(p.id)}" type="button">${esc(p.full_name)}</button>`).join('')+'</div>';box.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>go(byId(b.dataset.p)))};
  const go=async p=>{if(!p)return;if(await file('wrong_detail',p.id))openEdit(p)};
  box.querySelector('#trvMissing').onclick=async()=>{let n=byId(f.nearest)||ppl[0];if(!n)return;if(await file('missing_person',n.id))enterAdd(n,n.id)}}
-function trvDone(s){let e=trvEl();e.innerHTML=trvHead(esc(TRV_TEXT.doneTitle))+`<div class="trv-score">${esc(TRV_TEXT.scoreOf(s.score,s.total))}</div><p class="center">${esc(TRV_TEXT.doneNote)}</p><h3>${esc(TRV_TEXT.board)}</h3>`+s.leaderboard.map((r,i)=>`<div class="trv-row"><span>${i+1}. ${esc(r.name)}</span><b>${r.score}</b></div>`).join('')}
+function trvDone(s,justFinished=false){let e=trvEl();e.innerHTML=trvHead(esc(TRV_TEXT.doneTitle))+`<div class="trv-score">${esc(TRV_TEXT.scoreOf(s.score,s.total))}</div><p class="center">${esc(TRV_TEXT.doneNote)}</p><h3>${esc(TRV_TEXT.board)}</h3>`+s.leaderboard.map((r,i)=>`<div class="trv-row"><span>${i+1}. ${esc(r.name)}</span><b>${r.score}</b></div>`).join('');if(justFinished)trvInstallNudge(e)}
 </script></body></html>
