@@ -32,6 +32,8 @@ function layout(model,rootId,opts){
   const M=model,nodes=[],lines=[],hearts=[],groups=[];
   const root=M.byId.get(rootId);if(!root)return null;
   const unclesOpen=opts.unclesOpen===true;
+  const nephewsOpen=opts.nephewsOpen===true;
+  const cousinsOpen=opts.cousinsOpen===true;
   // --- down subtrees ---
   function downSub(pid,depth,ctxSeen){
     const sp=M.activeSpouses(pid).filter(s=>!ctxSeen.has(s));
@@ -166,27 +168,76 @@ function layout(model,rootId,opts){
   rootParentSrc.forEach(p=>curve(p[0],p[1],rootNode.x+rootNode.w/2,rootNode.y));
   // siblings
   g0.filter(s=>s.type==='sib').forEach(s=>{const n=addNode(s.id,s.x+C.NODE_W/2,0,{sibling:true,half:s.half});
-    const spn=s.sp.map((z,i)=>addNode(z,s.x+C.NODE_W/2+(i+1)*(C.NODE_W+C.COUPLE_GAP),0,{sibSpouse:true,spouse:true}));couple([n,...spn],false);
+    s.node=n;
+    const spn=s.sp.map((z,i)=>addNode(z,s.x+C.NODE_W/2+(i+1)*(C.NODE_W+C.COUPLE_GAP),0,{sibSpouse:true,spouse:true}));s.spNodes=spn;couple([n,...spn],false);
     const shared=M.parentsOf(s.id).filter(pp=>pids.includes(pp));
     srcFor(s.half?shared:pids).forEach(p=>curve(p[0],p[1],n.x+n.w/2,n.y));
     if(s.half){const g=M.byId.get(s.id).gender;n.label=g==='female'?'אחות למחצה':g==='male'?'אח למחצה':'אח/ות למחצה'}});
+  // --- nephews (children of siblings) and cousins (children of uncles) ---
+  const genderTag=(id,m,f,u)=>{const g=(M.byId.get(id)||{}).gender;return g==='female'?f:g==='male'?m:u};
+  const placed=new Set(reserved);
+  const dash=(sx,sy,tx,ty)=>lines.push({curve:true,dashed:true,pts:[[sx,sy],[tx,ty]]});
+  // data for the chips (computed whether or not the rows are open)
+  g0.filter(s=>s.type==='sib').forEach(s=>{const ks=new Set();for(const pid of [s.id,...s.sp])for(const k of M.childrenOf(pid))if(M.byId.has(k)&&!placed.has(k))ks.add(k);s.kids=[...ks]});
+  const sibWithKids=g0.filter(s=>s.type==='sib'&&s.kids.length);
+  const hasNephews=sibWithKids.length>0;
+  if(nephewsOpen&&hasNephews){
+    const e=[...nodes.filter(n=>n.gen===1).map(n=>[n.x,n.x+n.w]),...groups.filter(g=>g.gen===1).map(g=>[g.x,g.x+g.w])];
+    const g1L=e.length?Math.min(...e.map(q=>q[0])):rootCx-C.NODE_W/2,g1R=e.length?Math.max(...e.map(q=>q[1])):rootCx+C.NODE_W/2;
+    for(const side of ['L','R']){
+      const slots=sibWithKids.filter(s=>(side==='L')===(s.x+s.w/2<rootCx)).sort((a,b)=>side==='L'?b.x-a.x:a.x-b.x);
+      let cur=side==='L'?g1L-C.GAP:g1R+C.GAP;
+      for(const s of slots){
+        const w=s.kids.length*C.NODE_W+(s.kids.length-1)*C.GAP;
+        const desired=s.x+s.w/2;let cx;
+        if(side==='L'){const xr=Math.min(desired+w/2,cur);cx=xr-w/2;cur=xr-w-C.GAP}
+        else{const xl=Math.max(desired-w/2,cur);cx=xl+w/2;cur=xl+w+C.GAP}
+        const b=bot(s.node);let kx=cx-w/2;
+        for(const k of s.kids){if(placed.has(k))continue;const n=addNode(k,kx+C.NODE_W/2,1,{nephew:true,label:genderTag(k,'אחיין','אחיינית','אחיין/ית')});dash(b[0],b[1],n.x+n.w/2,n.y);placed.add(k);kx+=C.NODE_W+C.GAP}
+      }
+    }
+  }
+  const uncleKids=[];
+  par.forEach(p=>p.uncles.forEach(u=>{const ks=new Set();for(const pid of [u.id,...u.sp])for(const k of M.childrenOf(pid))if(M.byId.has(k)&&!placed.has(k))ks.add(k);u.kids=[...ks];if(u.kids.length)uncleKids.push({p,u})}));
+  const hasCousins=uncleKids.length>0;
+  if(unclesOpen&&cousinsOpen&&hasCousins){
+    const g0n=nodes.filter(n=>n.gen===0);
+    const b0L=Math.min(...g0n.map(n=>n.x)),b0R=Math.max(...g0n.map(n=>n.x+n.w));
+    for(const side of ['left','right']){
+      const list=uncleKids.filter(o=>o.p.side===side).sort((a,b)=>side==='left'?parentNodes.get(b.u.id).x-parentNodes.get(a.u.id).x:parentNodes.get(a.u.id).x-parentNodes.get(b.u.id).x);
+      let cur=side==='left'?b0L-C.GAP:b0R+C.GAP;
+      for(const {u} of list){
+        const un=parentNodes.get(u.id);if(!un)continue;
+        const w=u.kids.length*C.NODE_W+(u.kids.length-1)*C.GAP;
+        const desired=un.x+un.w/2;let cx;
+        if(side==='left'){const xr=Math.min(desired+w/2,cur);cx=xr-w/2;cur=xr-w-C.GAP}
+        else{const xl=Math.max(desired-w/2,cur);cx=xl+w/2;cur=xl+w+C.GAP}
+        const b=bot(un);let kx=cx-w/2;
+        for(const k of u.kids){if(placed.has(k))continue;const n=addNode(k,kx+C.NODE_W/2,0,{cousin:true,label:genderTag(k,'בן דודים','בת דודים','בן/ת דודים')});dash(b[0],b[1],n.x+n.w/2,n.y);placed.add(k);kx+=C.NODE_W+C.GAP}
+      }
+    }
+  }
   // "ההורים של X" tags on the connector gap above each parent unit
   const tags=[];const nm=id=>M.byId.get(id).full_name;
   if(par.length){const f=parentNodes.get(par[0].pid),l=parentNodes.get(par[par.length-1].pid);tags.push({x:(f.x+l.x+l.w)/2,y:f.y+f.h+C.ROW_GAP*0.5,text:'ההורים של '+nm(rootId)})}
   ancTags.forEach(t=>{const n=t.node;tags.push({x:n.x+n.w/2,y:n.y-C.ROW_GAP*(hasUncles&&n.gen===-1?0.78:0.5),text:'ההורים של '+nm(t.pid)})});
-  const unclesChip=hasUncles?{x:rootNode.x+rootNode.w/2,y:rowY(-1)-36,w:92,h:30,open:unclesOpen}:null;
+  const unclesChip=hasUncles?{x:rootNode.x+rootNode.w/2,y:rowY(-1)-36,w:92,h:30,open:unclesOpen,kind:'uncles',label:'דודים'}:null;
+  const nephewsChip=hasNephews?{x:(Math.min(...sibWithKids.map(s=>s.x))+Math.max(...sibWithKids.map(s=>s.x+s.w)))/2,y:rowY(1)-36,w:104,h:30,open:nephewsOpen,kind:'nephews',label:'אחיינים'}:null;
+  const uncleNodes=uncleKids.map(o=>parentNodes.get(o.u.id)).filter(Boolean);
+  const cousinsChip=(unclesOpen&&hasCousins&&uncleNodes.length)?{x:(Math.min(...uncleNodes.map(n=>n.x))+Math.max(...uncleNodes.map(n=>n.x+n.w)))/2,y:rowY(0)-36,w:112,h:30,open:cousinsOpen,kind:'cousins',label:'בני דודים'}:null;
+  const chips=[unclesChip,nephewsChip,cousinsChip].filter(Boolean);
   // bounds
   let minX=Infinity,maxX=-Infinity,maxY=0;
-  nodes.concat(groups.filter(g=>!g.hidden),unclesChip?[{x:unclesChip.x-unclesChip.w/2,y:unclesChip.y,w:unclesChip.w,h:unclesChip.h}]:[]).forEach(n=>{minX=Math.min(minX,n.x);maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h)});
+  nodes.concat(groups.filter(g=>!g.hidden),chips.map(c=>({x:c.x-c.w/2,y:c.y,w:c.w,h:c.h}))).forEach(n=>{minX=Math.min(minX,n.x);maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h)});
   const shift=C.PAD-minX,W=maxX-minX+2*C.PAD,H=maxY+C.PAD;
-  if(unclesChip)unclesChip.x+=shift;
+  chips.forEach(c=>c.x+=shift);
   nodes.forEach(n=>n.x+=shift);tags.forEach(t=>t.x+=shift);groups.forEach(n=>n.x+=shift);hearts.forEach(h=>h.x+=shift);lines.forEach(l=>l.pts.forEach(p=>p[0]+=shift));
   // validity metrics
   const issues=[];
   const rows={};nodes.forEach(n=>(rows[n.gen]=rows[n.gen]||[]).push(n));
   for(const g in rows){const r=rows[g].slice().sort((a,b)=>a.x-b.x);for(let i=1;i<r.length;i++)if(r[i].x<r[i-1].x+r[i-1].w-0.5)issues.push('overlap gen '+g+': '+r[i-1].id+' / '+r[i].id)}
   const ids=nodes.map(n=>n.id);if(new Set(ids).size!==ids.length)issues.push('duplicate person node');
-  return{W,H,nodes,tags,lines,hearts,unclesChip,groups:groups.filter(g=>!g.hidden),rootId,issues,moreUp:truncUp,moreDown:truncDown,collapsibleKeys:rootSub.expandedKey?[rootSub.expandedKey]:[]};
+  return{W,H,nodes,tags,lines,hearts,unclesChip,chips,groups:groups.filter(g=>!g.hidden),rootId,issues,moreUp:truncUp,moreDown:truncDown,collapsibleKeys:rootSub.expandedKey?[rootSub.expandedKey]:[]};
 }
 
 /* ---------- render (DOM) ---------- */
@@ -213,7 +264,7 @@ function html(model,L){
   const nd=L.nodes.map(n=>{const p=model.byId.get(n.id);return`<button type="button" class="tv-node${n.isRoot?' root':''}${n.spouse?' sp':''}${n.ancestor?' anc':''}" data-tv-person="${esc(n.id)}" style="left:${mx(n.x,n.w)}px;top:${n.y}px;width:${n.w}px;height:${n.h}px"><span class="tv-av" style="background:${nameColor(p.full_name)}">${esc(initials(p.full_name))}</span><span class="tv-name"><b>${esc(p.full_name)}</b>${n.label?`<small>${esc(n.label)}</small>`:''}</span></button>`}).join('');
   const gr=L.groups.map(g=>`<button type="button" class="tv-node tv-group" data-tv-group="${esc(g.key)}" style="left:${mx(g.x,g.w)}px;top:${g.y}px;width:${g.w}px;height:${g.h}px"><b>${esc(g.label)}</b><small>הקישו לפתיחה</small></button>`).join('');
   const tg=(L.tags||[]).map(t=>`<div class="tv-tag" style="left:${mx(t.x)}px;top:${t.y}px">${esc(t.text)}</div>`).join('');
-  const uc=L.unclesChip;const chip=uc?`<button type="button" class="tv-uncles" data-tv-uncles aria-expanded="${uc.open}" style="left:${mx(uc.x+uc.w/2,0)}px;top:${uc.y}px;width:${uc.w}px;height:${uc.h}px">${uc.open?'− דודים':'+ דודים'}</button>`:'';
+  const chip=(L.chips||[]).map(c=>`<button type="button" class="tv-uncles" data-tv-chip="${c.kind}"${c.kind==='uncles'?' data-tv-uncles':''} aria-expanded="${c.open}" style="left:${mx(c.x+c.w/2,0)}px;top:${c.y}px;width:${c.w}px;height:${c.h}px">${c.open?'− '+c.label:'+ '+c.label}</button>`).join('');
   return`<div class="tv-canvas" style="width:${L.W}px;height:${L.H}px"><svg width="${L.W}" height="${L.H}" aria-hidden="true">${svg}</svg>${tg}${nd}${gr}${chip}</div>`;
 }
 
@@ -242,15 +293,15 @@ const CSS=`.tv-uncles{box-sizing:border-box;position:absolute;z-index:2;directio
 .tv-wrap.tv-immersive .tv-scroll::-webkit-scrollbar{display:none}`;
 
 function mount(el,model,rootId,opts){
-  opts=opts||{};const expanded=new Set();let last;let unclesOpen=opts.unclesOpen===true;let immersiveMode=false,dock=null;const dockHomes=new Map();const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
+  opts=opts||{};const expanded=new Set();let last;let unclesOpen=opts.unclesOpen===true;let nephewsOpen=opts.nephewsOpen===true;let cousinsOpen=opts.cousinsOpen===true;let immersiveMode=false,dock=null;const dockHomes=new Map();const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
   if(!document.getElementById('tv-css')){const s=document.createElement('style');s.id='tv-css';s.textContent=CSS;document.head.appendChild(s)}
   el.innerHTML='<div class="tv-wrap"><div class="tv-gen"><button type="button" data-tv-gen="up">עוד דור ↑</button></div><div class="tv-scroll"></div><div class="tv-gen"><button type="button" data-tv-gen="down">עוד דור ↓</button></div><div class="tv-btns"><button type="button" data-tv-dir="back">חזרה</button><button type="button" data-tv-dir="more">המשך העץ</button></div></div>';
   const sc=el.querySelector('.tv-scroll');
   function paint(keepScroll){
-    const prev=sc.scrollLeft;last=layout(model,rootId,{expanded,extraUp:ex.up,extraDown:ex.down,unclesOpen});sc.innerHTML=html(model,last);
+    const prev=sc.scrollLeft;last=layout(model,rootId,{expanded,extraUp:ex.up,extraDown:ex.down,unclesOpen,nephewsOpen,cousinsOpen});sc.innerHTML=html(model,last);
     const canvas=sc.querySelector('.tv-canvas');canvas.style.marginRight=last.W<sc.clientWidth?(sc.clientWidth-last.W)/2+'px':'';
     sc.querySelectorAll('[data-tv-group]').forEach(b=>b.onclick=()=>{expanded.add(b.dataset.tvGroup);paint(true)});
-    const chip=sc.querySelector('[data-tv-uncles]');if(chip)chip.onclick=()=>{anchorChange(()=>{unclesOpen=!unclesOpen});if(opts.onUncles)opts.onUncles(unclesOpen)};
+    sc.querySelectorAll('[data-tv-chip]').forEach(ch=>ch.onclick=()=>{const k=ch.dataset.tvChip;anchorChange(()=>{if(k==='uncles')unclesOpen=!unclesOpen;else if(k==='nephews')nephewsOpen=!nephewsOpen;else cousinsOpen=!cousinsOpen});if(k==='uncles'&&opts.onUncles)opts.onUncles(unclesOpen);if(k==='nephews'&&opts.onNephews)opts.onNephews(nephewsOpen);if(k==='cousins'&&opts.onCousins)opts.onCousins(cousinsOpen)});
     sc.querySelectorAll('[data-tv-person]').forEach(b=>b.onclick=()=>opts.onPerson&&opts.onPerson(b.dataset.tvPerson));
     if(keepScroll)sc.scrollLeft=prev;else{const r=sc.querySelector('.root');if(r){const max=sc.scrollWidth-sc.clientWidth,c=r.offsetLeft+r.offsetWidth/2;sc.scrollLeft=Math.min(0,Math.max(-max,Math.min(max,Math.max(0,c-sc.clientWidth/2))-max))}else sc.scrollLeft=-(sc.scrollWidth-sc.clientWidth)/2}
     if(immersiveMode&&!keepScroll){const r=sc.querySelector('.root');if(r)sc.scrollTop=Math.max(0,r.offsetTop+r.offsetHeight/2-sc.clientHeight/2)}
@@ -261,7 +312,10 @@ function mount(el,model,rootId,opts){
     const r0=sc.querySelector('.root'),b0=r0&&r0.getBoundingClientRect();
     change();paint(true);
     const r1=sc.querySelector('.root');
-    if(b0&&r1){const b1=r1.getBoundingClientRect();try{if(immersiveMode){sc.scrollTop+=b1.top-b0.top}else{window.scrollBy(0,b1.top-b0.top)}sc.scrollLeft+=b1.left-b0.left}catch(e){}}
+    if(b0&&r1){const b1=r1.getBoundingClientRect();try{if(immersiveMode){sc.scrollTop+=b1.top-b0.top}else{window.scrollBy(0,b1.top-b0.top)}sc.scrollLeft+=b1.left-b0.left}catch(e){}
+      // residual horizontal compensation: when the canvas is narrower than the scroller, the
+      // centering margin changes and scrollLeft has no range - nudge the margin instead.
+      try{const cv=sc.querySelector('.tv-canvas');for(let i=0;i<3;i++){const b2=r1.getBoundingClientRect();const dx=Math.round(b2.left-b0.left);if(!dx)break;const mr=parseFloat(cv.style.marginRight)||0;cv.style.marginRight=Math.max(0,mr+dx)+'px'}}catch(e){}}
     upd();
   }
   function grow(dir){
@@ -289,7 +343,7 @@ function mount(el,model,rootId,opts){
     }
     paint(false);
   }
-  paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex,get unclesOpen(){return unclesOpen},setImmersive,get immersive(){return immersiveMode}};
+  paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex,get unclesOpen(){return unclesOpen},get nephewsOpen(){return nephewsOpen},get cousinsOpen(){return cousinsOpen},setImmersive,get immersive(){return immersiveMode}};
 }
 
 const api={C,makeModel,layout,html,mount};
