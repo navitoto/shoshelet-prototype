@@ -118,7 +118,7 @@ body.immersive-landscape #bottomApp{display:none}
 @media(prefers-reduced-motion:reduce){.loading-mark,.loading-mark path{animation:none!important}.loading-mark{opacity:1;transform:none}.loading-mark path{stroke-dasharray:none;stroke-dashoffset:0}}
 
 .startup-timing{overflow-wrap:anywhere}.startup-timing dl{margin:12px 0}.startup-timing dl>div{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--sand)}.startup-timing dt{flex:1}.startup-timing dd{margin:0;white-space:nowrap;direction:ltr;font-variant-numeric:tabular-nums}.startup-timing textarea{width:100%;min-height:220px;font:14px/1.6 Arial;direction:rtl}
-</style></head><body><main class="app"><header class="top"><span class="brand"><img src="./assets/shoshelet-mark.svg" alt="">שושלת</span><button id="openSettings" class="hidden" aria-label="הגדרות" title="הגדרות">⚙</button></header>
+.startup-timing-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;background:#fff;border:1px solid var(--sand);border-radius:16px;font-weight:bold}.startup-timing-toggle input{width:26px;height:26px;accent-color:var(--green);flex-shrink:0}.startup-timing-switch p{line-height:1.6;overflow-wrap:anywhere}</style></head><body><main class="app"><header class="top"><span class="brand"><img src="./assets/shoshelet-mark.svg" alt="">שושלת</span><button id="openSettings" class="hidden" aria-label="הגדרות" title="הגדרות">⚙</button></header>
 <section id="loading" class="screen on"><div class="loading-mark" role="img" aria-label="טוען"><svg xmlns="http://www.w3.org/2000/svg" viewBox="96 88 240 270" aria-hidden="true" focusable="false">
   <g fill="none" stroke="#085E45" stroke-linecap="round">
     <path pathLength="100" d="M215 300 L192 338 M215 300 L215 342 M215 300 L238 338" stroke-width="15"/>
@@ -150,8 +150,20 @@ body.immersive-landscape #bottomApp{display:none}
 <script src="./tree-view.js" defer></script><script type="module">import{createClient}from'https://esm.sh/@supabase/supabase-js@2';
 
 /* Temporary opt-in startup measurements: fixed labels and numeric ms only. */
+const startupTimingKey='shoshelet_startup_timing';
+let startupTimingEnabled=false;
+try{startupTimingEnabled=localStorage.getItem(startupTimingKey)==='1'}catch{}
+startupTimingEnabled=startupTimingEnabled||new URLSearchParams(location.search).get('startupTiming')==='1';
+const startupTimingSwitch=document.createElement('div');startupTimingSwitch.className='settings-group startup-timing-switch';
+startupTimingSwitch.innerHTML='<h2>מדידה זמנית</h2><label class="startup-timing-toggle"><span>מדידת זמני טעינה</span><input type="checkbox" id="startupTimingToggle" role="switch"></label><p id="startupTimingSwitchStatus" role="status"></p><p class="muted">נשמרת רק הבחירה להפעיל מדידה במכשיר הזה. הזמנים נשמרים עד העתקה או סגירה, בלי נתוני משפחה ובלי שליחה החוצה. כיבוי המתג מוחק את הבחירה ואת הזמנים.</p>';
+document.querySelector('#settings .settings-intro').after(startupTimingSwitch);
+const startupTimingInput=startupTimingSwitch.querySelector('input'),startupTimingStatus=startupTimingSwitch.querySelector('[role="status"]');
+const updateStartupTimingSwitch=()=>{startupTimingInput.checked=startupTimingEnabled;startupTimingStatus.textContent=startupTimingEnabled?'מופעל. סגרו לגמרי את האפליקציה ופתחו אותה מחדש כדי למדוד את הפתיחה הבאה.':'כבוי. להפעלה, הדליקו את המתג ופתחו את האפליקציה מחדש.'};
+updateStartupTimingSwitch();
+startupTimingInput.onchange=()=>{const enabled=startupTimingInput.checked;try{if(enabled){localStorage.setItem(startupTimingKey,'1');if(localStorage.getItem(startupTimingKey)!=='1')throw Error()}else localStorage.removeItem(startupTimingKey)}catch{startupTimingInput.checked=startupTimingEnabled;startupTimingStatus.textContent=enabled?'לא ניתן לשמור את ההפעלה במכשיר. המדידה לא הופעלה.':'לא ניתן למחוק את הבחירה במכשיר. נסו שוב.';return}
+ startupTimingEnabled=enabled;if(!enabled){startupTiming?.clear();const url=new URL(location.href);url.searchParams.delete('startupTiming');history.replaceState(history.state,'',url);document.querySelector('.startup-timing')?.remove()}updateStartupTimingSwitch()};
 const startupTiming=(()=>{
- if(new URLSearchParams(location.search).get('startupTiming')!=='1')return null;
+ if(!startupTimingEnabled)return null;
  const moduleAt=performance.now(),values=new Map();let running=true,finished=false,cleared=false;
  const labels={module:'עד תחילת קוד האפליקציה',session:'בדיקת התחברות',user:'אימות משתמש',loadSession:'בדיקת התחברות בטעינת הכרטיס',claim:'שיוך למשפחה',family:'נתוני המשפחה',verified:'סימון אימות',render:'בניית הכרטיס',card:'עד כרטיס מוכן',total:'סך הכול עד סיום הפתיחה'};
  values.set('module',Math.round(moduleAt));
@@ -159,12 +171,12 @@ const startupTiming=(()=>{
  const rows=()=>Object.keys(labels).filter(k=>values.has(k)).map(k=>[labels[k],values.get(k)]);
  const text=()=>['זמני טעינה (מילישניות)',...rows().map(([label,ms])=>`${label}: ${ms}`)].join('\n');
  const panel=document.createElement('div');panel.className='settings-group startup-timing';panel.innerHTML='<h2>זמני טעינה</h2><p class="muted">מדידה זמנית, רק במכשיר. אין נתוני משפחה ואין שליחה החוצה. הזמן עד תחילת הקוד כולל גם את טעינת הדף והספריות; זמני השלבים אינם סכום של זמן הפתיחה.</p><dl id="startupTimingRows"></dl><button id="copyStartupTiming" type="button" class="btn">העתקת זמני טעינה</button><p id="startupTimingNotice" class="muted" role="status"></p><textarea id="startupTimingFallback" readonly hidden aria-label="סיכום זמני טעינה להעתקה ידנית"></textarea>';
- document.querySelector('#settings .settings-intro').after(panel);
+ startupTimingSwitch.after(panel);
  const render=()=>{const dl=panel.querySelector('dl');dl.replaceChildren();for(const [label,ms]of rows()){const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=`${ms} ms`;row.append(dt,dd);dl.append(row)}panel.querySelector('button').disabled=!finished||cleared};
- const clear=()=>{values.clear();running=false;cleared=true;render()};
+ const clear=()=>{values.clear();running=false;cleared=true;panel.querySelector('textarea').value='';panel.querySelector('textarea').hidden=true;render()};
  panel.querySelector('button').onclick=async()=>{const summary=text(),notice=panel.querySelector('#startupTimingNotice');try{if(!navigator.clipboard?.writeText)throw Error();await navigator.clipboard.writeText(summary);clear();notice.textContent='הועתק. המדידה נמחקה מהמכשיר. אפשר לשלוח את הסיכום ולרענן למדידה נוספת.'}catch{const field=panel.querySelector('textarea');field.hidden=false;field.value=summary;field.focus();field.select();notice.textContent='העתקה אוטומטית לא זמינה. בחרו את הסיכום והעתיקו ידנית.'}};
  addEventListener('pagehide',()=>{clear();panel.querySelector('textarea').value='';panel.querySelector('textarea').hidden=true});
- render();return {async measure(key,fn){if(!running||cleared)return await fn();const at=performance.now();try{return await fn()}finally{add(key,performance.now()-at)}},sync(key,fn){if(!running||cleared)return fn();const at=performance.now();try{return fn()}finally{add(key,performance.now()-at)}},card(){if(running&&!values.has('card'))add('card',performance.now())},finish(){if(running){add('total',performance.now());running=false;finished=true;render()}}};
+ render();return {clear,async measure(key,fn){if(!running||cleared)return await fn();const at=performance.now();try{return await fn()}finally{add(key,performance.now()-at)}},sync(key,fn){if(!running||cleared)return fn();const at=performance.now();try{return fn()}finally{add(key,performance.now()-at)}},card(){if(running&&!values.has('card'))add('card',performance.now())},finish(){if(running){add('total',performance.now());running=false;finished=true;render()}}};
 })();
 const startupMeasure=(key,fn)=>startupTiming?startupTiming.measure(key,fn):fn();
 var trvFillTok=0;const sb=createClient('https://kwtvgzevfvfjlfdpvzem.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dHZnemV2ZnZmamxmZHB2emVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3ODI5MzcsImV4cCI6MjEwNTM1ODkzN30.vevkNEH6JTKTF0K02f9Dw8RymGXZpaksvBN6kg4V5yU',{auth:{persistSession:true,detectSessionInUrl:false,flowType:'pkce'}}),$=s=>document.querySelector(s),screens=[...document.querySelectorAll('.screen')];let memorialEntryEnabled=false;function renderMemorialEntry(){let el=$('#showMemorialEntry');el.checked=memorialEntryEnabled;el.setAttribute('aria-checked',String(memorialEntryEnabled));$('#relativeMemorial').hidden=!memorialEntryEnabled;if(!memorialEntryEnabled){$('#relativeMemorial').open=false;$('#relativeDeathDate').value=''}}$('#showMemorialEntry').onchange=async e=>{let checkbox=e.target,next=checkbox.checked;checkbox.disabled=true;let{data,error}=await sb.auth.updateUser({data:{show_memorial_entry:next}});checkbox.disabled=false;if(error){toast('ההגדרה לא נשמרה. נסו שוב.');return renderMemorialEntry()}memorialEntryEnabled=data.user.user_metadata?.show_memorial_entry===true;renderMemorialEntry()};let me=null,ownerMe=null,relationTarget=null,editTarget=null,addOriginId=null,familyId=null,people=[],parents=[],unions=[],siblingDeclarations=[],verifiedPeople=new Set(),historyEvents=[];
