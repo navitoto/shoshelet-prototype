@@ -564,9 +564,8 @@ const TRV_FAM={pot:'הקופה המשפחתית',today:t=>`היום: ${t} נקו
  recTitle:'השיאים שלנו',recWays:'שלוש דרכים לשבור שיא',recSub:p=>`${p} נקודות, כולן בזכותנו.`,recJoy:'רגע של שמחה, ואז ממשיכים כרגיל.',
  recCards:[['daily_total','שיא יומי','הכי הרבה נקודות ביום אחד'],['weekly_total','שיא שבועי','הכי הרבה נקודות בשבוע'],['max_players','הכי הרבה שחקנים אי פעם','בני משפחה ששיחקו באותו יום']],
  prev:n=>`השיא הקודם: ${n}`,tagDay:'היום',tagWeek:'השבוע',newWord:'חדש',back:'חזרה לטריוויה',
- achTitle:'ההישגים של כולנו',achMedals:'המדליות המשפחתיות',doneOn:d=>`הושלם ב${d}`,achNote:'מציגים כמה חסר, לא מי לא שיחק.',
+ achTitle:'ההישגים של כולנו',achMedals:'המדליות המשפחתיות',doneOn:d=>`הושלם ב${d}`,
  stones:'אבני דרך בניקוד המצטבר',since:'מאז שהתחלנו',reached:'הגענו יחד',later:'בהמשך הדרך',more:r=>`עוד ${r}`,
- noDaily:'לא צריך לשחק כל יום',noDailyNote:'בלי רצפים ובלי רמות. כל משחק וכל פרט נכון מוסיפים משהו למשפחה.',
  err:'לא הצלחנו להציג את הקופה וההישגים. אפשר להמשיך לשחק או לנסות לטעון אותם שוב.',retry:'לטעון שוב'};
 
 /* Stage 2 "help us complete". APPROVED by Tut (WhatsApp 12-13.10): button title and subtext, accuracy notice, badge name, medal title/row text. FROM MOCKUPS 5-6 (reviewed mockup wording): titles, list labels, buttons, save/after-save for city. PENDING REVIEW (not approved, do not publish): everything under `pend`. */
@@ -610,9 +609,8 @@ function trvAchView(e,r){let p=r.progress,aw=new Set(r.medals),rows=[];
  let g=Math.min(p.chain,p.chain_target);rows.push(['three_gens',aw.has('three_gens'),aw.has('three_gens')?TRV_FAM.doneOn(trvWeekday(r.medal_days.three_gens||r.day)):(g===2?TRV_FAM.missingGen:''),aw.has('three_gens')?'':`${g}/${p.chain_target}`]);
  if(trvNum(p.fills)&&trvNum(p.fills_target))rows.push(['tree_fills',aw.has('tree_fills'),TRV_FILL.medalRow,aw.has('tree_fills')?'':`${Math.min(p.fills,p.fills_target)}/${p.fills_target}`]);
  let m=r.milestones,es=new Set(m.earned.map(Number)),stones=[500,1000,5000].map(n=>{let got=es.has(n),nx=m.next===n;return `<div class="${got?'got':nx?'nx':''}">${trvStar(got||nx)}<b>${n.toLocaleString('en-US')}</b><span class="muted">${esc(got?TRV_FAM.reached:nx?TRV_FAM.more(m.remaining):TRV_FAM.later)}</span></div>`}).join('');
- e.innerHTML=trvBackBar(TRV_FAM.achTitle)+`<h3 class="trv-h">${esc(TRV_FAM.achMedals)}</h3><div class="card trv-meds">`+rows.map(([k,on,sub,cnt])=>`<div class="trv-med">${trvStar(on)}<span class="trv-med-t"><b>${esc(TRV_FAM.medal[k])}</b>`+(sub?`<span class="muted">${esc(sub)}</span>`:'')+`</span>`+(on?'<span class="trv-ok">✓</span>':`<span class="trv-cnt">${esc(cnt)}</span>`)+`</div>`).join('')+`</div><p class="muted center">${esc(TRV_FAM.achNote)}</p>`+
-  `<h3 class="trv-h">${esc(TRV_FAM.stones)}</h3><div class="card"><div class="trv-st-h"><b>${esc(TRV_FAM.total(r.cumulative).replace('סך הכול: ',''))}</b><span class="trv-tag">${esc(TRV_FAM.since)}</span></div><div class="trv-stones">${stones}</div>${trvBar(m.next===null?100:trvPct(r.cumulative-m.from,m.next-m.from),TRV_FAM.stones,true)}</div>`+
-  `<div class="card"><b>${esc(TRV_FAM.noDaily)}</b><p class="muted">${esc(TRV_FAM.noDailyNote)}</p></div>`;
+ e.innerHTML=trvBackBar(TRV_FAM.achTitle)+`<h3 class="trv-h">${esc(TRV_FAM.achMedals)}</h3><div class="card trv-meds">`+rows.map(([k,on,sub,cnt])=>`<div class="trv-med">${trvStar(on)}<span class="trv-med-t"><b>${esc(TRV_FAM.medal[k])}</b>`+(sub?`<span class="muted">${esc(sub)}</span>`:'')+`</span>`+(on?'<span class="trv-ok">✓</span>':`<span class="trv-cnt">${esc(cnt)}</span>`)+`</div>`).join('')+`</div>`+
+  `<h3 class="trv-h">${esc(TRV_FAM.stones)}</h3><div class="card"><div class="trv-st-h"><b>${esc(TRV_FAM.total(r.cumulative).replace('סך הכול: ',''))}</b><span class="trv-tag">${esc(TRV_FAM.since)}</span></div><div class="trv-stones">${stones}</div>${trvBar(m.next===null?100:trvPct(r.cumulative-m.from,m.next-m.from),TRV_FAM.stones,true)}</div>`;
  e.querySelector('#trvBack').onclick=()=>triviaOpen()}
 /* mode 'ready' = screen 1 around the start card, 'done' = pot inside the finished card. */
 async function trvFamily(e,mode,justFinished){let top=e.querySelector('#trvFamTop'),bot=e.querySelector('#trvFamBottom');if(!top)return;let req=++trvFamRequest;top.dataset.state='loading';
