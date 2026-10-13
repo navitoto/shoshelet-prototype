@@ -103,7 +103,28 @@ body.immersive-landscape #bottomApp{display:none}
 @media (prefers-reduced-motion:no-preference){.trv-bar2 i{transition:width .3s}}
 .trv-ansrow{display:flex;align-items:center;gap:12px;background:none;border:0;padding:6px 0}.trv-ansrow span{flex:1}.trv-ansrow .btn{flex:none;width:auto;padding:8px 14px;min-height:40px}.trv-anslink{display:block;margin:12px auto;color:#085e45;font-weight:700;text-decoration:underline;background:none;border:0;font:inherit;cursor:pointer}
 .trv-fillrow .trv-near-t small{color:#78867f;font-size:12px;font-weight:400}.trv-fillrow>span:last-child{white-space:nowrap;flex-shrink:0}
+
+/* Logo-only startup state: draw, hold, fade. */
+#loading.screen.on{display:grid;place-items:center;position:fixed;inset:0;z-index:2000;background:var(--cream);padding:0}
+.loading-mark{width:200px;height:225px;animation:loadingFade 1.85s linear infinite;transform-origin:50% 60%}
+.loading-mark svg{display:block;width:100%;height:100%}
+.loading-mark path{stroke-dasharray:100;stroke-dashoffset:100;animation:loadingRoots 1.85s ease-in-out infinite}
+.loading-mark path:nth-child(2){animation-name:loadingBranches}
+.loading-mark path:nth-child(3){animation-name:loadingTips}
+@keyframes loadingRoots{0%{stroke-dashoffset:100}56.757%,100%{stroke-dashoffset:0}}
+@keyframes loadingBranches{0%,40.541%{stroke-dashoffset:100}70.270%,100%{stroke-dashoffset:0}}
+@keyframes loadingTips{0%,54.054%{stroke-dashoffset:100}78.378%,100%{stroke-dashoffset:0}}
+@keyframes loadingFade{0%,83.784%{opacity:1;transform:scale(1)}68.919%{transform:scale(1.015)}97.297%,100%{opacity:0;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.loading-mark,.loading-mark path{animation:none!important}.loading-mark{opacity:1;transform:none}.loading-mark path{stroke-dasharray:none;stroke-dashoffset:0}}
 </style></head><body><main class="app"><header class="top"><span class="brand"><img src="./assets/shoshelet-mark.svg" alt="">שושלת</span><button id="openSettings" class="hidden" aria-label="הגדרות" title="הגדרות">⚙</button></header>
+<section id="loading" class="screen on"><div class="loading-mark" role="img" aria-label="טוען"><svg xmlns="http://www.w3.org/2000/svg" viewBox="96 88 240 270" aria-hidden="true" focusable="false">
+  <g fill="none" stroke="#085E45" stroke-linecap="round">
+    <path pathLength="100" d="M215 300 L192 338 M215 300 L215 342 M215 300 L238 338" stroke-width="15"/>
+    <path pathLength="100" d="M215 300 C262 258 290 208 296 124 M215 300 C222 252 220 206 212 162 M215 300 C182 272 152 250 132 214" stroke-width="32"/>
+    <path pathLength="100" d="M296 124 L280 96 M296 124 L316 100 M212 162 L196 138 M212 162 L230 140" stroke-width="18"/>
+  </g>
+</svg>
+</div></section>
 <section id="gate" class="screen center"><img class="mark" src="./assets/shoshelet-mark.svg" alt="סמל שושלת - שי״ן עם שורשים"><h1>ברוכים הבאים לשושלת</h1><p class="lead">המקום המשפחתי שלכם לגלות מי קשור למי, לשמור סיפורים ולהכיר את המשפחה המורחבת.</p><p id="gateNotice" class="notice hidden" role="status"></p><button class="btn primary" data-go="join">הצטרפו בהזמנה</button><div>או</div><button class="btn" data-go="create">פתחו משפחה חדשה</button><button id="existingLogin" class="link">כבר יש לי משפחה</button><p class="muted">רק בני המשפחה שהצטרפו יכולים לראות את העץ.</p><small id="buildMarker" class="muted">גרסה 2026.10.08-0005</small><a class="link" href="privacy.html">מדיניות פרטיות</a></section>
 <section id="join" class="screen"><button class="back" data-go="gate">‹</button><div class="onboarding-progress" role="group" aria-label="שלב 1 מתוך 3: התחברות"><div class="onboarding-progress-label"><span>שלב 1 מתוך 3</span><span>התחברות</span></div><div class="onboarding-track" aria-hidden="true"><div class="onboarding-fill" style="width:33.3333%"></div></div></div><h1>הצטרפות למשפחה</h1><label>קוד ההזמנה</label><input id="invite" placeholder="הדביקו כאן את הקוד שקיבלתם"><button id="previewInvite" class="btn primary">בדיקת ההזמנה</button><div id="inviteResult" class="notice hidden"></div><button id="joinGoogle" class="btn primary hidden">המשך עם Google</button></section>
 <section id="claimPerson" class="screen"><button class="back" data-go="join" aria-label="חזרה להזמנה">‹</button><div class="onboarding-progress" role="group" aria-label="שלב 2 מתוך 3: הכרטיס שלכם"><div class="onboarding-progress-label"><span>שלב 2 מתוך 3</span><span>הכרטיס שלכם</span></div><div class="onboarding-track" aria-hidden="true"><div class="onboarding-fill" style="width:66.6667%"></div></div></div><h1>בחרו את הכרטיס שלכם</h1><p id="claimIntro" class="lead"></p><label for="claimSearch">חיפוש לפי שם</label><input id="claimSearch" autocomplete="off" placeholder="הקלידו שם"><div id="claimPeople" aria-live="polite"></div><p id="claimSelection" class="notice hidden"></p><button id="confirmClaim" type="button" class="btn primary" disabled>זה אני, להצטרף למשפחה</button><p id="claimError" class="notice hidden" role="alert"></p></section>
