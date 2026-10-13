@@ -493,7 +493,7 @@ function trvInstallNudge(e){
 const TRV_TEXT={title:'טריוויה',qOf:(n,t)=>`שאלה ${n} מתוך ${t}`,next:'לשאלה הבאה',report:'משהו לא נכון בשאלה?',right:'התשובה הנכונה: ',yours:'הבחירה שלך: ',doneTitle:'סיימת להיום',doneNote:'יפה! נתראה מחר עם שאלות חדשות',
 /* INVENTED WORDING - needs Tut's approval before publishing */
 start:'התחלה',startNote:(t,s)=>`${t} שאלות להיום, אותן שאלות לכל המשפחה. ${s} שניות לכל שאלה.`,timeUp:'נגמר הזמן',empty:'עוד אין מספיק בעץ כדי לשאול. אפשר להוסיף קרובים וכינויים, ומחר ננסה שוב.',err:'משהו לא הסתדר. נסו שוב בעוד רגע.',retry:'נסו שוב',
-reportAsk:'מה לא נכון?',reportWrong:'פרט לא נכון',reportMissing:'חסר אדם בעץ',reportThanks:'תודה. השאלה תישאר עד חצות ולא תיספר נגדך.',reportPick:'באיזה אדם מדובר?',scoreOf:(s,t)=>`${s}/${t}`,board:'לוח תוצאות להיום',weekBoard:'לוח השבוע',cancel:'ביטול'};
+reportAsk:'מה לא נכון?',reportWrong:'פרט לא נכון',reportMissing:'חסר אדם בעץ',reportThanks:'תודה. השאלה תישאר עד חצות ולא תיספר נגדך.',reportPick:'באיזה אדם מדובר?',scoreOf:(s,t)=>`${s}/${t}`,board:'לוח תוצאות להיום',weekBoard:'לוח ניקוד שבועי מצטבר',cancel:'ביטול'};
 let trvState=null,trvTimer=null,trvBusy=false;
 function trvEl(){return document.querySelector('#trivia .trv')}
 function trvStop(){clearInterval(trvTimer);trvTimer=null}
