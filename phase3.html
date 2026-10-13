@@ -102,6 +102,7 @@ body.immersive-landscape #bottomApp{display:none}
 .trv-st-h{display:flex;justify-content:space-between;align-items:center;font-size:20px}.trv-stones{display:flex;justify-content:space-around;text-align:center;margin:14px 0}.trv-stones>div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px}.trv-stones .got b{color:var(--green)}.trv-stones .nx b{color:#a9841c}
 @media (prefers-reduced-motion:no-preference){.trv-bar2 i{transition:width .3s}}
 .trv-ansrow{display:flex;align-items:center;gap:12px;background:none;border:0;padding:6px 0}.trv-ansrow span{flex:1}.trv-ansrow .btn{flex:none;width:auto;padding:8px 14px;min-height:40px}.trv-anslink{display:block;margin:12px auto;color:#085e45;font-weight:700;text-decoration:underline;background:none;border:0;font:inherit;cursor:pointer}
+.trv-fillrow .trv-near-t small{color:#78867f;font-size:12px;font-weight:400}.trv-fillrow>span:last-child{white-space:nowrap;flex-shrink:0}
 </style></head><body><main class="app"><header class="top"><span class="brand"><img src="./assets/shoshelet-mark.svg" alt="">שושלת</span><button id="openSettings" class="hidden" aria-label="הגדרות" title="הגדרות">⚙</button></header>
 <section id="gate" class="screen center"><img class="mark" src="./assets/shoshelet-mark.svg" alt="סמל שושלת - שי״ן עם שורשים"><h1>ברוכים הבאים לשושלת</h1><p class="lead">המקום המשפחתי שלכם לגלות מי קשור למי, לשמור סיפורים ולהכיר את המשפחה המורחבת.</p><p id="gateNotice" class="notice hidden" role="status"></p><button class="btn primary" data-go="join">הצטרפו בהזמנה</button><div>או</div><button class="btn" data-go="create">פתחו משפחה חדשה</button><button id="existingLogin" class="link">כבר יש לי משפחה</button><p class="muted">רק בני המשפחה שהצטרפו יכולים לראות את העץ.</p><small id="buildMarker" class="muted">גרסה 2026.10.08-0005</small><a class="link" href="privacy.html">מדיניות פרטיות</a></section>
 <section id="join" class="screen"><button class="back" data-go="gate">‹</button><div class="onboarding-progress" role="group" aria-label="שלב 1 מתוך 3: התחברות"><div class="onboarding-progress-label"><span>שלב 1 מתוך 3</span><span>התחברות</span></div><div class="onboarding-track" aria-hidden="true"><div class="onboarding-fill" style="width:33.3333%"></div></div></div><h1>הצטרפות למשפחה</h1><label>קוד ההזמנה</label><input id="invite" placeholder="הדביקו כאן את הקוד שקיבלתם"><button id="previewInvite" class="btn primary">בדיקת ההזמנה</button><div id="inviteResult" class="notice hidden"></div><button id="joinGoogle" class="btn primary hidden">המשך עם Google</button></section>
@@ -600,11 +601,35 @@ async function trvFillView(s){let e=trvEl();if(!e)return;let tok=++trvFillTok;e.
  try{let r=await trvRpc('trivia_family_missing',{});if(!live())return;if(!trvObj(r)||!Array.isArray(r.parents)||!Array.isArray(r.partners)||!Array.isArray(r.details))throw new Error('bad payload');trvFillRender(e,s,r,tok)}
  catch(x){console.warn('trivia missing unavailable',x?.code||x?.name||'error');if(!live())return;let b=e.querySelector('#trvFillBody');if(!b)return;b.className='card trv-err center';b.innerHTML=`<p>${esc(TRV_FILL.pend.loadErr)}</p><button type="button" class="btn ghost" id="trvFillRetry">${esc(TRV_FAM.retry)}</button>`;b.querySelector('#trvFillRetry').onclick=()=>trvFillView(s)}}
 let trvFillReq=0;
-function trvFillRender(e,s,r,tok){let h='';
+// Viewer-relative completion order. Only sorts candidates already returned by the RPC.
+function trvFillCloseness(){
+ let paths=new Map();if(!ownerMe?.id||!byId(ownerMe.id))return {paths,known:false};
+ let g=graph(),q=[ownerMe.id];paths.set(ownerMe.id,[ownerMe.id]);
+ for(let i=0;i<q.length;i++){let id=q[i];for(let next of g.get(id)||[])if(!paths.has(next)){paths.set(next,[...paths.get(id),next]);q.push(next)}}
+ return {paths,known:true};
+}
+function trvFillSort(list,ctx){if(!ctx.known)return list.slice();let dist=p=>ctx.paths.has(p.person_id)?ctx.paths.get(p.person_id).length-1:Infinity;
+ return list.slice().sort((a,b)=>{let da=dist(a),db=dist(b);return (da===db?0:da-db)||a.name.localeCompare(b.name,'he')||a.person_id.localeCompare(b.person_id)});
+}
+function trvFillKin(id,ctx){if(!ctx.known)return '';let path=ctx.paths.get(id),p=byId(id);if(!path||!p)return 'קרבה לא ידועה';if(id===ownerMe.id)return 'אני';
+ let g=p.gender,word=(female,male,neutral)=>g==='female'?female:g==='male'?male:neutral;
+ if(parentLink(id,ownerMe.id))return word('אמא','אבא','הורה');
+ if(parentLink(ownerMe.id,id))return word('בת','בן','ילד/ה');
+ if(sharedParents(ownerMe.id,id))return siblingLabel(ownerMe.id,id);
+ let u=unions.find(x=>(x.person_a===id&&x.person_b===ownerMe.id)||(x.person_b===id&&x.person_a===ownerMe.id));
+ if(u)return word('בת זוג','בן זוג','בן/בת זוג')+(u.status==='ended'?' לשעבר':'');
+ let kind=namedKinshipPath(path),labels={grandparent:['סבתא','סבא','סב/סבתא'],grandchild:['נכדה','נכד','נכד/ה'],greatGrandparent:['סבתא רבתא','סבא רבא','סב/סבתא רבא'],greatGrandchild:['נינה','נין','נין/נינה'],firstCousin:['בת דודה','בן דוד','בן/בת דוד'],secondCousin:['בת דודה מדרגה שנייה','בן דוד מדרגה שנייה','בן/בת דוד מדרגה שנייה'],parentInLaw:['חמה','חם','הורה של בן/בת הזוג'],childInLaw:['כלה','חתן','בן/בת זוג של הילד/ה'],siblingInLaw:['גיסה','גיס','גיס/גיסה']};
+ if(labels[kind])return word(...labels[kind]);
+ if(parentsOf(ownerMe.id).some(x=>sharedParents(x.id,id)))return word('דודה','דוד','דוד/דודה');
+ if(parentsOf(id).some(x=>sharedParents(x.id,ownerMe.id)))return word('אחיינית','אחיין','אחיין/אחיינית');
+ return 'קרוב/ת משפחה';
+}
+function trvFillRender(e,s,r,tok){let h='',ctx=trvFillCloseness();
  let miss=[...r.parents.map(p=>[p&&p.known===1?'parent2':'parent',p]),...r.partners.map(p=>['partner',p])].filter(([k,p])=>p&&typeof p.person_id==='string'&&typeof p.name==='string');
+ if(ctx.known){let sorted=trvFillSort(miss.map(x=>x[1]),ctx);miss.sort((a,b)=>sorted.indexOf(a[1])-sorted.indexOf(b[1]))}
  if(miss[0]){let [k,p]=miss[0];h+=`<div class="card trv-fillhead"><b>${esc(k==='parent'?TRV_FILL.parentsOf(p.name):k==='parent2'?TRV_FILL.parent2Of(p.name):TRV_FILL.partnerOf(p.name))}</b><p class="muted">${esc(k==='parent'?TRV_FILL.parentsSub:TRV_FILL.partnerSub)}</p><button type="button" class="btn" id="trvAddRel">${esc(k==='partner'?TRV_FILL.addPartner:TRV_FILL.addParent)}</button><p class="muted">${esc(TRV_FILL.skipOk)}</p></div>`}
- let rows=r.details.filter(d=>d&&typeof d.person_id==='string'&&typeof d.name==='string'&&Array.isArray(d.fields)).flatMap(d=>d.fields.filter(f=>TRV_FILL_FIELDS.includes(f)).map(f=>[d,f]));
- if(rows.length)h+=`<h3 class="trv-h">${esc(TRV_FILL.more)}</h3><div class="card">`+rows.map(([d,f],i)=>`<button type="button" class="trv-near trv-fillrow" data-i="${i}"><span class="trv-near-t"><b>${esc(trvFillLabel(f).row(d.name))}</b></span><span>${esc(TRV_FILL.toCard)}</span></button>`).join('')+`</div>`;
+ let rows=trvFillSort(r.details.filter(d=>d&&typeof d.person_id==='string'&&typeof d.name==='string'&&Array.isArray(d.fields)),ctx).flatMap(d=>d.fields.filter(f=>TRV_FILL_FIELDS.includes(f)).map(f=>[d,f]));
+ if(rows.length)h+=`<h3 class="trv-h">${esc(TRV_FILL.more)}</h3><div class="card">`+rows.map(([d,f],i)=>`<button type="button" class="trv-near trv-fillrow" data-i="${i}"><span class="trv-near-t"><b>${esc(trvFillLabel(f).row(d.name))}</b>${ctx.known?`<small>${esc(trvFillKin(d.person_id,ctx))}</small>`:''}</span><span>${esc(TRV_FILL.toCard)}</span></button>`).join('')+`</div>`;
  if(!miss[0]&&!rows.length)h+=`<div class="card center muted">${esc(TRV_FILL.pend.empty)}</div>`;
  if(trvNum(r.fills)&&trvNum(r.fills_target)&&r.fills_target>0){let l=Math.max(0,r.fills_target-r.fills);h+=`<div class="card"><b>${esc(TRV_FILL.fillsDone(r.fills))}</b>${l?`<p class="muted">${esc(TRV_FILL.fillsLeft(l))}</p>`:''}${trvBar(trvPct(r.fills,r.fills_target),TRV_FILL.medalRow,true)}</div>`}
  if(trvNum(r.answers)&&r.answers>0)h+=`<button type="button" class="trv-link trv-anslink" id="trvAnsLink">${esc(TRV_FILL.ansLink)}</button>`;
