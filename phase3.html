@@ -595,9 +595,9 @@ all_in:'בני המשפחה הרשומים מסיימים חידון באותו 
 full_week:'7 בני משפחה שונים מסיימים לפחות חידון אחד באותו שבוע, מיום ראשון עד שבת.',
 three_gens:'סבא או סבתא, הילד או הילדה שלהם, והנכד או הנכדה מסיימים חידון באותו יום. הקשרים ביניהם צריכים להיות רשומים בעץ.',
 tree_fills:'משלימים יחד 10 פרטים חסרים דרך \'עזרו לנו להשלים\': עיר מגורים, יום הולדת או כינוי. כל פרט בכרטיס נספר פעם אחת.',
-first_game:'מסיימים חידון אחד מאז שהתחלנו לספור את ההישגים.',
-knows_branch:'מסיימים חידון עם 5 תשובות נכונות מתוך 5. נקודות שנוספו בגלל דיווח על שאלה לא נספרות לתג הזה.',
-completed_detail:'מוסיפים פרט חסר דרך \'עזרו לנו להשלים\' ושומרים אותו בכרטיס. \'אין כינוי\' לא נחשב להשלמת פרט.'};
+first_game:'מסיימים חידון ראשון',
+knows_branch:'מסיימים חידון עם 5 מתוך 5 תשובות נכונות',
+completed_detail:'מוסיפים פרט חסר דרך \'עזרו לנו להשלים\''};
 let trvMedalDialog=null;
 function trvMedalClose(){if(trvMedalDialog?.open)trvMedalDialog.close()}
 function trvMedalOpen(key,source){let n=Number(key),title=TRV_FAM.medal[key]||TRV_FAM.badge[key]||([500,1000,5000].includes(n)?n.toLocaleString('en-US')+' נקודות':''),text=TRV_MEDAL_HELP[key]||([500,1000,5000].includes(n)?`מגיעים יחד ל-${n.toLocaleString('en-US')} נקודות מכל החידונים שהסתיימו, מאז שהתחלנו לספור.`:'');if(!title||!text)return;
