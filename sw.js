@@ -1,4 +1,4 @@
-const CACHE='shoshelet-v57';
+const CACHE='shoshelet-v58';
 const ASSETS=['./phase3.html','./supabase-2.117.3.esm.js','./privacy.html','./tree-view.js','./manifest.webmanifest','./assets/shoshelet-mark.svg','./assets/shoshelet-app-icon-192.png','./assets/shoshelet-app-icon-512.png','./assets/apple-touch-icon.png','./assets/favicon-32.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
