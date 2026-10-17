@@ -612,7 +612,7 @@ const TRV_MEDAL_HELP={
 all_in:'בני המשפחה הרשומים מסיימים חידון באותו יום. המדליה משותפת למשפחה.',
 full_week:'7 בני משפחה שונים מסיימים לפחות חידון אחד באותו שבוע, מיום ראשון עד שבת.',
 three_gens:'סבא או סבתא, הילד או הילדה שלהם, והנכד או הנכדה מסיימים חידון באותו יום. הקשרים ביניהם צריכים להיות רשומים בעץ.',
-tree_fills:'משלימים יחד 10 פרטים חסרים דרך \'עזרו לנו להשלים\': עיר מגורים, יום הולדת או כינוי. כל פרט בכרטיס נספר פעם אחת.',
+tree_fills:'משלימים יחד 10 פרטים חסרים דרך \'עזרו לנו להשלים\': עיר מגורים או יום הולדת. כל פרט בכרטיס נספר פעם אחת.',
 first_game:'מסיימים חידון ראשון',
 knows_branch:'מסיימים חידון עם 5 מתוך 5 תשובות נכונות',
 completed_detail:'מוסיפים פרט חסר דרך \'עזרו לנו להשלים\'',
@@ -687,7 +687,7 @@ function trvFillExample(r){
  if(!d)return '';
  if(d.fields.includes('birthday'))return TRV_FILL.exBirthday(d.name);
  if(d.fields.includes('city'))return TRV_FILL.exCity(d.name);
- return TRV_FILL.exNick(d.name);
+ return '';
 }
 function trvFillPopOpen(s,r,n){
  if(document.querySelector('#trvInstallNudge'))return; // install sheet owns the moment; try again tomorrow
@@ -741,7 +741,7 @@ function trvFillRender(e,s,r,tok){trvFillSkipCheck();let h='',ctx=trvFillClosene
  if(rows.length)h+=`<h3 class="trv-h">${esc(TRV_FILL.more)}</h3><div class="card">`+rows.map(([d,f],i)=>`<div class="trv-fill-item"><span class="trv-near-t"><b>${esc(trvFillLabel(f).row(d.name))}</b>${ctx.known?`<small>${esc(trvFillKin(d.person_id,ctx))}</small>`:''}</span><div class="trv-fill-actions"><button type="button" class="trv-fillrow" data-i="${i}" aria-label="${esc(TRV_FILL.toCardOf(d.name)+': '+trvFillLabel(f).label)}">${esc(TRV_FILL.toCard)}</button><button type="button" class="trv-skip" data-skip-i="${i}" aria-label="${esc('דלג: '+trvFillLabel(f).row(d.name))}">דלג</button></div></div>`).join('')+`</div>`;
  if(!miss[0]&&!rows.length)h+=`<div class="card center muted">${esc(trvFillSkipped.size?'אין עוד הצעות כרגע. אפשר להחזיר את ההצעות שדילגתם.':TRV_FILL.pend.empty)}</div>`;
  if(trvNum(r.fills)&&trvNum(r.fills_target)&&r.fills_target>0){let l=Math.max(0,r.fills_target-r.fills);h+=`<div class="card"><b>${esc(TRV_FILL.fillsDone(r.fills))}</b>${l?`<p class="muted">${esc(TRV_FILL.fillsLeft(l))}</p>`:''}${trvBar(trvPct(r.fills,r.fills_target),TRV_FILL.medalRow,true)}</div>`}
- if(trvNum(r.answers)&&r.answers>0)h+=`<button type="button" class="trv-link trv-anslink" id="trvAnsLink">${esc(TRV_FILL.ansLink)}</button>`;
+
  h+=`<p class="muted center" id="trvSkipStatus" role="status"></p>`;if(trvFillSkipped.size)h+='<button type="button" class="btn ghost trv-full" id="trvSkipRestore">להחזיר הצעות שדילגתי</button>';h+=`<p class="muted center">${esc(TRV_FILL.notice)}</p>`;
  let b=e.querySelector('#trvFillBody');if(!b)return;b.className='';b.innerHTML=h;
  let al=b.querySelector('#trvAnsLink');if(al)al.onclick=()=>trvAnswersView(e,s);let ar=b.querySelector('#trvAddRel');if(ar)ar.onclick=()=>{let t=byId(miss[0][1].person_id);if(t){navPersonId=t.id;openPerson(t.id);enterAdd(t,t.id)}};
@@ -751,10 +751,10 @@ function trvFillRender(e,s,r,tok){trvFillSkipCheck();let h='',ctx=trvFillClosene
  let sf=b.querySelector('#trvSkipFeatured');if(sf)sf.onclick=()=>{trvFillSkipped.add(trvFillSkipKey(miss[0][0],miss[0][1].person_id));rerender(0,true)};
  let restore=b.querySelector('#trvSkipRestore');if(restore)restore.onclick=()=>{trvFillSkipped.clear();rerender(0,false,true)};
 } 
-const TRV_FILL_FIELDS=['city','birthday','nickname'];
+const TRV_FILL_FIELDS=['city','birthday'];
 const trvFillLabel=f=>f==='city'?TRV_FILL.city:TRV_FILL.pend[f];
 function trvFillDetail(e,s,r,d,f){let tok=++trvFillTok,live=()=>tok===trvFillTok&&trvEl()===e&&document.body.contains(e)&&trvShown();let L=trvFillLabel(f),inp=f==='birthday'?`<div class="trv-bd"><select id="trvFillDay" aria-label="${esc(TRV_FILL.pend.day)}"><option value="">${esc(TRV_FILL.pend.day)}</option>${Array.from({length:31},(_,i)=>`<option>${i+1}</option>`).join('')}</select><select id="trvFillMonth" aria-label="${esc(TRV_FILL.pend.month)}"><option value="">${esc(TRV_FILL.pend.month)}</option>${Array.from({length:12},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}</select></div>`:`<input id="trvFillVal" maxlength="${f==='city'?60:40}" autocomplete="off">`;
- e.innerHTML=trvBackBar(TRV_FILL.cardOf(d.name))+`<h3 class="trv-h">${esc(TRV_FILL.editTitle)}</h3><div class="card"><b>${esc(L.label)}</b><p class="muted">${esc(L.help(d.name))}</p>${inp}</div><div class="card"><p class="muted">${esc(TRV_FILL.notice)}</p></div><p id="trvFillMsg" class="center" role="status"></p><button type="button" class="btn trv-full" id="trvFillSave">${esc(TRV_FILL.save)}</button>${f==='nickname'?`<button type="button" class="btn ghost trv-full" id="trvNoNick">${esc(TRV_FILL.noNick)}</button>`:''}<button type="button" class="btn ghost trv-full" id="trvFillCancel">${esc(TRV_FILL.backNoSave)}</button>`;
+ e.innerHTML=trvBackBar(TRV_FILL.cardOf(d.name))+`<h3 class="trv-h">${esc(TRV_FILL.editTitle)}</h3><div class="card"><b>${esc(L.label)}</b><p class="muted">${esc(L.help(d.name))}</p>${inp}</div><div class="card"><p class="muted">${esc(TRV_FILL.notice)}</p></div><p id="trvFillMsg" class="center" role="status"></p><button type="button" class="btn trv-full" id="trvFillSave">${esc(TRV_FILL.save)}</button><button type="button" class="btn ghost trv-full" id="trvFillCancel">${esc(TRV_FILL.backNoSave)}</button>`;
  let back=()=>trvFillView(s);e.querySelector('#trvBack').onclick=e.querySelector('#trvFillCancel').onclick=back;
  let sv=e.querySelector('#trvFillSave'),msg=e.querySelector('#trvFillMsg');
  let nn=e.querySelector('#trvNoNick');if(nn)nn.onclick=async()=>{if(trvBusy)return;trvBusy=true;sv.disabled=nn.disabled=true;msg.textContent='';
