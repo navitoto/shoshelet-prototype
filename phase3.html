@@ -93,7 +93,7 @@ body.immersive-landscape #bottomApp{display:none}
 .trv-pot{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;border:1.5px solid var(--gold);border-radius:20px;background:var(--green);color:#fff;padding:20px 18px;margin:0 0 16px;font:inherit;text-align:center;cursor:pointer}.trv-pot-l{opacity:.85;font-size:15px}.trv-pot-big{font-size:34px;font-weight:700;color:#f0d77a}.trv-pot-rec{color:#e6c761;font-size:16px}.trv-pot-sep{display:block;width:100%;height:1px;background:#ffffff33;margin:6px 0}.trv-pot-tot{font-size:16px}.trv-pot-next{font-size:13px;opacity:.85}
 .trv-donebox{cursor:default}.trv-link{display:block;width:100%;border:0;background:none;color:#f3d77a;font:inherit;padding:10px 0 0;cursor:pointer}.trv-full{width:100%}.trv-err{text-align:center;padding:12px 0}.trv-err p{margin:0 0 10px}.trv-donebox .trv-err{color:#fff}.trv-donebox .trv-err .btn{color:#fff;border-color:#ffffff88}.trv-fam-in{width:100%}.trv-fam-in:empty{display:none}.trv-potin{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;border:0;border-top:1px solid #ffffff33;background:none;color:inherit;font:inherit;padding:12px 0 0;margin-top:8px;cursor:pointer}.trv .card{padding:16px}.trv-bar2{display:block;width:100%;height:8px;border-radius:4px;background:#ffffff33;overflow:hidden;margin-top:6px}.trv-bar2 i{display:block;height:100%;background:var(--gold)}.trv-bar2.dark{background:var(--sand)}
 .trv-celebrate{color:var(--green);font-size:18px}.trv-set{display:flex;justify-content:space-between;align-items:center}.trv-pill{background:var(--sand);border-radius:12px;padding:3px 10px;font-size:13px}
-.trv-h{color:#a9841c;font-size:17px;margin:18px 0 10px}.trv-near{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;width:100%;text-align:start;background:var(--white);border:1px solid var(--sand);border-radius:18px;padding:14px 16px;font:inherit;color:inherit;cursor:pointer}.trv-near .trv-bar2{grid-column:1/-1}.trv-near-t{display:flex;flex-direction:column;gap:2px}
+.trv-h{color:#a9841c;font-size:17px;margin:18px 0 10px}.trv-near{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;width:100%;text-align:start;background:var(--white);border:1px solid var(--sand);border-radius:18px;padding:14px 16px;font:inherit;color:inherit;cursor:pointer}.trv-near .trv-bar2{grid-column:1/-1}.trv-near-t{display:flex;flex-direction:column;gap:2px}.trv-fillcta{display:flex;flex-direction:column;gap:3px;align-items:center;width:100%;text-align:center;background:var(--green);color:var(--cream);border:0;border-radius:18px;padding:16px 18px;margin:6px 0 14px;font:inherit;cursor:pointer;box-shadow:var(--shadow)}.trv-fillcta b{font-size:19px}.trv-fillcta-sub{font-size:14px;opacity:.92}.trv-fillcta-go{color:var(--gold);font-weight:700;font-size:16px;margin-top:5px}.trv-fillcta:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .trv-star{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background:var(--sand);color:#b5ab8e;font-size:18px}.trv-star.on{background:#f3e5b6;color:#a9841c}
 .trv-mine{display:flex;justify-content:space-around;background:var(--white);border:1px solid var(--sand);border-radius:18px;padding:14px 8px}.trv-mine>div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px}
 .trv-sub{display:flex;align-items:center;gap:10px;font-size:19px;margin:0 0 14px}.trv-back{border:0;background:none;font-size:26px;color:var(--green);padding:4px 8px;cursor:pointer}
@@ -587,7 +587,7 @@ const TRV_FAM={pot:'הקופה המשפחתית',today:t=>`היום: ${t} נקו
  err:'לא הצלחנו להציג את הקופה וההישגים. אפשר להמשיך לשחק או לנסות לטעון אותם שוב.',retry:'לטעון שוב'};
 
 /* Stage 2 "help us complete". APPROVED by Tut (WhatsApp 12-13.10): button title and subtext, accuracy notice, badge name, medal title/row text. FROM MOCKUPS 5-6 (reviewed mockup wording): titles, list labels, buttons, save/after-save for city. PENDING REVIEW (not approved, do not publish): everything under `pend`. */
-const TRV_FILL={noNick:'אין לאדם הזה כינוי',noNickDone:'נרשם שאין כינוי.',noNickHow:'אפשר לשנות את זה ב״תשובות אין כינוי״ ברשימה.',noNickHas:'מישהו כבר הוסיף כינוי, ולא שינינו אותו.',noNickUnk:'לא הצלחנו לוודא שהתשובה נרשמה. אפשר לנסות שוב.',ansLink:'תשובות ״אין כינוי״ ›',ansTitle:'תשובות ״אין כינוי״',ansSub:'אלה האנשים שנרשם עליהם שאין כינוי. ביטול התשובה מאפשר להציע שוב השלמת כינוי, אם הוא עדיין חסר בכרטיס.',ansCancel:'לבטל תשובה',ansMore:'הצגת עוד',ansCount:(k,n)=>`מוצגות ${k} מתוך ${n}`,ansEmpty:'אין תשובות כאלה.',ansCancelled:'התשובה בוטלה.',ansCancelUnk:'לא הצלחנו לוודא שהתשובה בוטלה. אפשר לנסות שוב.',toCardOf:n=>`לכרטיס של ${n} ›`,backList:'חזרה לרשימה',parent2Of:n=>`לא רשום הורה שני ל${n}`,partnerOf:n=>`לא רשום בן או בת זוג ל${n}`,btn:'עזרו לנו להשלים',btnSub:'אולי אתם יודעים משהו שחסר בעץ?',title:'עזרו להשלים',
+const TRV_FILL={noNick:'אין לאדם הזה כינוי',noNickDone:'נרשם שאין כינוי.',noNickHow:'אפשר לשנות את זה ב״תשובות אין כינוי״ ברשימה.',noNickHas:'מישהו כבר הוסיף כינוי, ולא שינינו אותו.',noNickUnk:'לא הצלחנו לוודא שהתשובה נרשמה. אפשר לנסות שוב.',ansLink:'תשובות ״אין כינוי״ ›',ansTitle:'תשובות ״אין כינוי״',ansSub:'אלה האנשים שנרשם עליהם שאין כינוי. ביטול התשובה מאפשר להציע שוב השלמת כינוי, אם הוא עדיין חסר בכרטיס.',ansCancel:'לבטל תשובה',ansMore:'הצגת עוד',ansCount:(k,n)=>`מוצגות ${k} מתוך ${n}`,ansEmpty:'אין תשובות כאלה.',ansCancelled:'התשובה בוטלה.',ansCancelUnk:'לא הצלחנו לוודא שהתשובה בוטלה. אפשר לנסות שוב.',toCardOf:n=>`לכרטיס של ${n} ›`,backList:'חזרה לרשימה',parent2Of:n=>`לא רשום הורה שני ל${n}`,partnerOf:n=>`לא רשום בן או בת זוג ל${n}`,btn:'עזרו לנו להשלים',btnSub:'אולי אתם יודעים משהו שחסר בעץ?',ctaTitle:'מה חסר בעץ?',ctaSub:n=>n===1?'פרט אחד שאולי תדעו להשלים':`${n} פרטים שאולי תדעו להשלים`,ctaGo:'להשלמה ›',popLater:'לא עכשיו',exBirthday:n=>`למשל: יום ההולדת של ${n} עדיין לא רשום`,exCity:n=>`למשל: העיר של ${n} עדיין לא רשומה`,exNick:n=>`למשל: עדיין אין כינוי ל${n}`,title:'עזרו להשלים',
  notice:'מה שתכתבו נכנס ישר לכרטיס של האדם, ולכל המשפחה. לא בטוחים? עדיף לדלג.',
  parentsOf:n=>`חסרים ההורים של ${n}`,parentsSub:'אולי אתם מכירים אותם? תוסיפו, והעץ של כולנו יתרחב.',addParent:'להוסיף הורה',partnerSub:'אולי אתם יודעים מי? תוסיפו, והעץ של כולנו יתרחב.',addPartner:'להוסיף בן או בת זוג',skipOk:'גם "לא יודע/ת" זו תשובה בסדר.',
  more:'עוד פרטים שאפשר להשלים',toCard:'לכרטיס ›',fillsDone:n=>`${n} פרטים כבר הושלמו ביחד`,fillsLeft:n=>`עוד ${n} למדליה המשפחתית`,
@@ -661,6 +661,50 @@ async function trvFillView(s){let e=trvEl();if(!e)return;let tok=++trvFillTok;e.
  let live=()=>tok===trvFillTok&&trvEl()===e&&document.body.contains(e)&&trvShown();
  try{let r=await trvRpc('trivia_family_missing',{});if(!live())return;if(!trvObj(r)||!Array.isArray(r.parents)||!Array.isArray(r.partners)||!Array.isArray(r.details))throw new Error('bad payload');trvFillRender(e,s,r,tok)}
  catch(x){console.warn('trivia missing unavailable',x?.code||x?.name||'error');if(!live())return;let b=e.querySelector('#trvFillBody');if(!b)return;b.className='card trv-err center';b.innerHTML=`<p>${esc(TRV_FILL.pend.loadErr)}</p><button type="button" class="btn ghost" id="trvFillRetry">${esc(TRV_FAM.retry)}</button>`;b.querySelector('#trvFillRetry').onclick=()=>trvFillView(s)}}
+/* v2.67: prominent entry to the fill page + once-a-day bottom sheet after the daily quiz (approved 17.10). */
+let trvFillCtaTok=0;
+async function trvFillCtaLoad(e,s,justFinished){
+ let tok=++trvFillCtaTok,r;
+ try{r=await trvRpc('trivia_family_missing',{})}catch(x){return}
+ if(tok!==trvFillCtaTok||!trvShown()||!document.body.contains(e))return;
+ if(!trvObj(r)||!Array.isArray(r.parents)||!Array.isArray(r.partners)||!Array.isArray(r.details))return;
+ let n=r.parents.length+r.partners.length+r.details.reduce((k,d)=>k+(Array.isArray(d.fields)?d.fields.length:0),0);
+ let sub=e.querySelector('#trvFillCtaSub');if(sub&&n>0)sub.textContent=TRV_FILL.ctaSub(n);
+ if(justFinished&&n>0)trvFillPopOpen(s,r,n);
+}
+const TRV_FILL_POP_KEY='trvFillPop1';
+function trvFillPopState(){try{let o=JSON.parse(localStorage.getItem(TRV_FILL_POP_KEY));return o&&typeof o==='object'?o:{}}catch(x){return{}}}
+function trvFillPopSave(o){try{localStorage.setItem(TRV_FILL_POP_KEY,JSON.stringify(o))}catch(x){}}
+function trvFillPopDue(scope){
+ let st=trvFillPopState(),today=trvDay();
+ if(st.scope!==scope)st={scope,last:'',streak:0};
+ if(st.last===today)return{due:false,st};
+ if((st.streak||0)>=3&&st.last){let diff=(new Date(today)-new Date(st.last))/86400000;if(diff<7)return{due:false,st}}
+ return{due:true,st};
+}
+function trvFillExample(r){
+ let d=(r.details||[]).find(x=>x&&typeof x.name==='string'&&Array.isArray(x.fields)&&x.fields.length);
+ if(!d)return '';
+ if(d.fields.includes('birthday'))return TRV_FILL.exBirthday(d.name);
+ if(d.fields.includes('city'))return TRV_FILL.exCity(d.name);
+ return TRV_FILL.exNick(d.name);
+}
+function trvFillPopOpen(s,r,n){
+ if(document.querySelector('#trvInstallNudge'))return; // install sheet owns the moment; try again tomorrow
+ let chk=trvFillPopDue(trvScope());if(!chk.due)return;
+ let st=chk.st;st.last=trvDay();trvFillPopSave(st);
+ let ex=trvFillExample(r),d=document.createElement('dialog');
+ d.className='trv-medal-dialog';d.setAttribute('aria-labelledby','trvFillPopTitle');
+ d.innerHTML='<div class="trv-medal-sheet"><div class="trv-medal-handle" aria-hidden="true"></div><h2 id="trvFillPopTitle" style="margin:0 0 6px;font-size:22px">'+esc(TRV_FILL.ctaTitle)+'</h2><p style="margin:0 0 4px">'+esc(TRV_FILL.ctaSub(n))+'</p>'+(ex?'<p style="margin:0 0 18px;color:#5a6a60;font-size:14px">'+esc(ex)+'</p>':'')+'<button type="button" class="btn trv-full" id="trvFillPopGo" style="margin-bottom:10px">'+esc(TRV_FILL.ctaGo)+'</button><button type="button" class="btn ghost trv-full" id="trvFillPopNo">'+esc(TRV_FILL.popLater)+'</button></div>';
+ document.body.append(d);
+ let overflow=document.body.style.overflow,went=false;
+ document.body.style.overflow='hidden';
+ d.addEventListener('close',()=>{document.body.style.overflow=overflow;d.remove();if(!went){let s2=trvFillPopState();s2.streak=(s2.streak||0)+1;trvFillPopSave(s2)}},{once:true});
+ d.querySelector('#trvFillPopGo').onclick=()=>{went=true;let s2=trvFillPopState();s2.streak=0;trvFillPopSave(s2);d.close();trvFillView(s)};
+ d.querySelector('#trvFillPopNo').onclick=()=>d.close();
+ d.onclick=ev=>{if(ev.target===d)d.close()};
+ d.showModal();d.querySelector('#trvFillPopGo').focus();
+}
 let trvFillReq=0;
 // Viewer-relative completion order. Only sorts candidates already returned by the RPC.
 function trvFillCloseness(){
@@ -757,5 +801,5 @@ async function trvAnswersView(e,s){let tok=++trvFillTok,live=()=>tok===trvFillTo
  await load(false)}
 /* Weekly board: only people with points this week. Needs the server function trivia_weekly; hidden if unavailable. */
 async function trvWeekly(e){let request=Symbol(),epoch=trvViewEpoch,scope=trvScope();e._weeklyRequest=request;let live=()=>document.body.contains(e)&&e._weeklyRequest===request&&epoch===trvViewEpoch&&scope===trvScope()&&!!e.querySelector('.trv-score,.trv-donebox');e.querySelector('#trvWeekly')?.remove();try{let r=await trvRpc('trivia_weekly',{});if(!r||!Array.isArray(r.leaderboard))throw new Error('Invalid weekly leaderboard response');if(!live())return false;let rows=r.leaderboard;if(rows.length){let d=document.createElement('div');d.id='trvWeekly';d.innerHTML=`<h3>${esc(TRV_TEXT.weekBoard)}</h3>`+rows.map((x,i)=>`<div class="trv-row"><span>${i+1}. ${esc(x.name)}</span><b>${esc(x.score)}</b></div>`).join('');e.appendChild(d)}return true}catch(x){if(live())e.querySelector('#trvWeekly')?.remove();console.warn('Weekly leaderboard unavailable',x?.code||x?.name||'error');return false}}
-function trvDone(s,justFinished=false){trvViewEpoch++;trvCache=null;trvFillTok++;let e=trvEl();e.innerHTML=trvHead(esc(TRV_TEXT.doneTitle))+`<div id="trvFamCel"></div><div class="trv-pot trv-donebox"><span class="trv-pot-l">${esc(TRV_FAM.well)}</span><span class="trv-pot-big">${esc(TRV_FAM.done(s.score,s.total))}</span><span class="trv-pot-rec">${esc(TRV_FAM.added(s.score))}</span><div id="trvFamTop" class="trv-fam-in" data-state="idle"></div></div><div id="trvFamBottom"></div><button type="button" class="trv-near trv-fillbtn" id="trvFillBtn"><span class="trv-near-t"><b>${esc(TRV_FILL.btn)}</b><span>${esc(TRV_FILL.btnSub)}</span></span></button><p class="center">${esc(TRV_TEXT.doneNote)}</p><h3>${esc(TRV_TEXT.board)}</h3>`+s.leaderboard.map((r,i)=>`<div class="trv-row"><span>${i+1}. ${esc(r.name)}</span><b>${r.score}</b></div>`).join('');trvCacheObserve(e,{...s,phase:'done'},[trvFamily(e,'done',justFinished),trvWeekly(e)]);e.querySelector('#trvFillBtn').onclick=()=>trvFillView(s);if(justFinished)trvInstallNudge(e)}
+function trvDone(s,justFinished=false){trvViewEpoch++;trvCache=null;trvFillTok++;let e=trvEl();e.innerHTML=trvHead(esc(TRV_TEXT.doneTitle))+`<div id="trvFamCel"></div><div class="trv-pot trv-donebox"><span class="trv-pot-l">${esc(TRV_FAM.well)}</span><span class="trv-pot-big">${esc(TRV_FAM.done(s.score,s.total))}</span><span class="trv-pot-rec">${esc(TRV_FAM.added(s.score))}</span><div id="trvFamTop" class="trv-fam-in" data-state="idle"></div></div><div id="trvFamBottom"></div><button type="button" class="trv-fillcta" id="trvFillBtn"><b>${esc(TRV_FILL.ctaTitle)}</b><span class="trv-fillcta-sub" id="trvFillCtaSub">${esc(TRV_FILL.btnSub)}</span><span class="trv-fillcta-go">${esc(TRV_FILL.ctaGo)}</span></button><p class="center">${esc(TRV_TEXT.doneNote)}</p><h3>${esc(TRV_TEXT.board)}</h3>`+s.leaderboard.map((r,i)=>`<div class="trv-row"><span>${i+1}. ${esc(r.name)}</span><b>${r.score}</b></div>`).join('');trvCacheObserve(e,{...s,phase:'done'},[trvFamily(e,'done',justFinished),trvWeekly(e)]);e.querySelector('#trvFillBtn').onclick=()=>trvFillView(s);if(justFinished)trvInstallNudge(e);trvFillCtaLoad(e,s,justFinished)}
 </script></body></html>
