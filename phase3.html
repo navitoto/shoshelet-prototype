@@ -577,7 +577,7 @@ const TRV_FAM={pot:'הקופה המשפחתית',today:t=>`היום: ${t} נקו
  setTitle:'הסט של היום',qs:n=>`${n} שאלות`,setNote:['משחק קטן, תרומה של כל אחד.','כל השתתפות מוסיפה לקופה המשפחתית.'],play:'לשחק ולהוסיף לקופה',
  near:'קרובים לתג משותף',played:n=>`כבר שיחקו ${n} בני משפחה`,missingOne:'חסר רק משתתף נוסף לתג',missingGen:'חסר רק דור נוסף לתג',
  mine:'התגים הקטנים שלי',mineNote:'הישג משפחתי משותף, בקצב של כל אחד.',badge:{first_game:'משחק ראשון',knows_branch:'מכיר את הענף',completed_detail:'השלמתי פרט',profile_photo:'יש לי תמונה',perfect_week:'שבוע מושלם'},
- medal:{all_in:'כולם בפנים',full_week:'שבוע של בית מלא',three_gens:'שלושה דורות על הקו',tree_fills:'העץ מתמלא'},
+ medal:{all_in:'כולם בפנים',full_week:'שבוע של בית מלא',three_gens:'שלושה דורות על הקו',tree_fills:'העץ מתמלא',tree_fills_100:'העץ פורח'},
  done:(s,t)=>`${s} מתוך ${t}`,added:n=>`הוספת ${n} נקודות לקופה המשפחתית`,well:'כל הכבוד',
  recTitle:'השיאים שלנו',recWays:'שלוש דרכים לשבור שיא',recSub:p=>`${p} נקודות, כולן בזכותנו.`,recJoy:'רגע של שמחה, ואז ממשיכים כרגיל.',
  recCards:[['daily_total','שיא יומי','הכי הרבה נקודות ביום אחד'],['weekly_total','שיא שבועי','הכי הרבה נקודות בשבוע'],['max_players','הכי הרבה שחקנים אי פעם','בני משפחה ששיחקו באותו יום']],
@@ -590,10 +590,10 @@ const TRV_FAM={pot:'הקופה המשפחתית',today:t=>`היום: ${t} נקו
 const TRV_FILL={noNick:'אין לאדם הזה כינוי',noNickDone:'נרשם שאין כינוי.',noNickHow:'אפשר לשנות את זה ב״תשובות אין כינוי״ ברשימה.',noNickHas:'מישהו כבר הוסיף כינוי, ולא שינינו אותו.',noNickUnk:'לא הצלחנו לוודא שהתשובה נרשמה. אפשר לנסות שוב.',ansLink:'תשובות ״אין כינוי״ ›',ansTitle:'תשובות ״אין כינוי״',ansSub:'אלה האנשים שנרשם עליהם שאין כינוי. ביטול התשובה מאפשר להציע שוב השלמת כינוי, אם הוא עדיין חסר בכרטיס.',ansCancel:'לבטל תשובה',ansMore:'הצגת עוד',ansCount:(k,n)=>`מוצגות ${k} מתוך ${n}`,ansEmpty:'אין תשובות כאלה.',ansCancelled:'התשובה בוטלה.',ansCancelUnk:'לא הצלחנו לוודא שהתשובה בוטלה. אפשר לנסות שוב.',toCardOf:n=>`לכרטיס של ${n} ›`,backList:'חזרה לרשימה',parent2Of:n=>`לא רשום הורה שני ל${n}`,partnerOf:n=>`לא רשום בן או בת זוג ל${n}`,btn:'עזרו לנו להשלים',btnSub:'אולי אתם יודעים משהו שחסר בעץ?',ctaTitle:'מה חסר בעץ?',ctaSub:n=>n===1?'פרט אחד שאולי תדעו להשלים':`${n} פרטים שאולי תדעו להשלים`,ctaGo:'להשלמה ›',popLater:'לא עכשיו',exBirthday:n=>`למשל: יום ההולדת של ${n} עדיין לא רשום`,exCity:n=>`למשל: העיר של ${n} עדיין לא רשומה`,exNick:n=>`למשל: עדיין אין כינוי ל${n}`,title:'עזרו להשלים',
  notice:'מה שתכתבו נכנס ישר לכרטיס של האדם, ולכל המשפחה. לא בטוחים? עדיף לדלג.',
  parentsOf:n=>`חסרים ההורים של ${n}`,parentsSub:'אולי אתם מכירים אותם? תוסיפו, והעץ של כולנו יתרחב.',addParent:'להוסיף הורה',partnerSub:'אולי אתם יודעים מי? תוסיפו, והעץ של כולנו יתרחב.',addPartner:'להוסיף בן או בת זוג',skipOk:'גם "לא יודע/ת" זו תשובה בסדר.',
- more:'עוד פרטים שאפשר להשלים',toCard:'לכרטיס ›',fillsDone:n=>`${n} פרטים כבר הושלמו ביחד`,fillsLeft:n=>`עוד ${n} למדליה המשפחתית`,
+ more:'עוד פרטים שאפשר להשלים',toCard:'לכרטיס ›',fillsDone:n=>`${n} פרטים כבר הושלמו ביחד`,fillsLeft:n=>`עוד ${n} למדליה המשפחתית`,fillsLeftTo:(n,m)=>`עוד ${n} ל'${m}'`,
  save:'שמירה בכרטיס',backNoSave:'חזרה בלי לשמור',cardOf:n=>`הכרטיס של ${n}`,editTitle:'עריכת פרט חסר',
  city:{label:'עיר מגורים',help:n=>`מוסיפים כאן, בכרטיס של ${n}.`,row:n=>`עיר מגורים של ${n}`,after:n=>`עיר המגורים עודכנה בכרטיס של ${n}. הפרט מצטרף להשלמות המשפחתיות.`},
- medalRow:'השלמנו 10 פרטים בעץ ביחד',
+  medalRow:'השלמנו 10 פרטים בעץ ביחד',medalRow100:'השלמנו 100 פרטים בעץ ביחד',
  pend:{birthday:{label:'יום הולדת (יום וחודש)',help:n=>`מוסיפים כאן, בכרטיס של ${n}.`,row:n=>`יום ההולדת של ${n}`,after:n=>`יום ההולדת עודכן בכרטיס של ${n}. הפרט מצטרף להשלמות המשפחתיות.`},
   nickname:{label:'כינוי',help:n=>`מוסיפים כאן, בכרטיס של ${n}.`,row:n=>`כינוי של ${n}`,after:n=>`הכינוי עודכן בכרטיס של ${n}. הפרט מצטרף להשלמות המשפחתיות.`},
   alreadyFilled:'מישהו כבר הוסיף כאן פרט, ולא שינינו אותו.',invalid:'הפרט לא נשמר. בדקו שמילאתם אותו נכון.',empty0:'כתבו או בחרו משהו לפני השמירה.',unknown:'לא הצלחנו לוודא אם הפרט נשמר. בדקו בכרטיס לפני שמנסים שוב.',nowThere:'הפרט מופיע עכשיו בכרטיס.',loadErr:'לא הצלחנו לטעון את הפרטים החסרים.',empty:'אין כרגע פרטים חסרים לרשימה.',day:'יום',month:'חודש'}};
@@ -613,6 +613,7 @@ all_in:'בני המשפחה הרשומים מסיימים חידון באותו 
 full_week:'7 בני משפחה שונים מסיימים לפחות חידון אחד באותו שבוע, מיום ראשון עד שבת.',
 three_gens:'סבא או סבתא, הילד או הילדה שלהם, והנכד או הנכדה מסיימים חידון באותו יום. הקשרים ביניהם צריכים להיות רשומים בעץ.',
 tree_fills:'משלימים יחד 10 פרטים חסרים דרך \'עזרו לנו להשלים\': עיר מגורים או יום הולדת. כל פרט בכרטיס נספר פעם אחת.',
+tree_fills_100:'משלימים יחד 100 פרטים חסרים דרך \'עזרו לנו להשלים\': עיר מגורים או יום הולדת. כל פרט בכרטיס נספר פעם אחת.',
 first_game:'מסיימים חידון ראשון',
 knows_branch:'מסיימים חידון עם 5 מתוך 5 תשובות נכונות',
 completed_detail:'מוסיפים פרט חסר דרך \'עזרו לנו להשלים\'',
@@ -645,6 +646,7 @@ function trvAchView(e,r){let p=r.progress,aw=new Set(r.medals),rows=[];
  let wmiss=p.week_target-p.week_players;rows.push(['full_week',aw.has('full_week'),aw.has('full_week')?TRV_FAM.doneOn(trvWeekday(r.medal_days.full_week||r.week)):(wmiss===1?TRV_FAM.missingOne:''),aw.has('full_week')?'':`${p.week_players}/${p.week_target}`]);
  let g=Math.min(p.chain,p.chain_target);rows.push(['three_gens',aw.has('three_gens'),aw.has('three_gens')?TRV_FAM.doneOn(trvWeekday(r.medal_days.three_gens||r.day)):(g===2?TRV_FAM.missingGen:''),aw.has('three_gens')?'':`${g}/${p.chain_target}`]);
  if(trvNum(p.fills)&&trvNum(p.fills_target))rows.push(['tree_fills',aw.has('tree_fills'),TRV_FILL.medalRow,aw.has('tree_fills')?'':`${Math.min(p.fills,p.fills_target)}/${p.fills_target}`]);
+ if(trvNum(p.fills))rows.push(['tree_fills_100',aw.has('tree_fills_100'),TRV_FILL.medalRow100,aw.has('tree_fills_100')?'':`${Math.min(p.fills,100)}/100`]);
  let m=r.milestones,es=new Set(m.earned.map(Number)),stones=[500,1000,5000].map(n=>{let got=es.has(n),nx=m.next===n;return `<button type="button" data-medal-help="${n}" class="${got?'got':nx?'nx':''}">${trvStar(got||nx)}<b>${n.toLocaleString('en-US')}</b><span class="muted">${esc(got?TRV_FAM.reached:nx?TRV_FAM.more(m.remaining):TRV_FAM.later)}</span></button>`}).join('');
  e.innerHTML=trvBackBar(TRV_FAM.achTitle)+`<h3 class="trv-h">${esc(TRV_FAM.achMedals)}</h3><div class="card trv-meds">`+rows.map(([k,on,sub,cnt])=>`<button type="button" class="trv-med" data-medal-help="${k}">${trvStar(on)}<span class="trv-med-t"><b>${esc(TRV_FAM.medal[k])}</b>`+(sub?`<span class="muted">${esc(sub)}</span>`:'')+`</span>`+(on?'<span class="trv-ok">✓</span>':`<span class="trv-cnt">${esc(cnt)}</span>`)+`</button>`).join('')+`</div>`+
   `<h3 class="trv-h">${esc(TRV_FAM.stones)}</h3><div class="card"><div class="trv-st-h"><b>${esc(TRV_FAM.total(r.cumulative).replace('סך הכול: ',''))}</b><span class="trv-tag">${esc(TRV_FAM.since)}</span></div><div class="trv-stones">${stones}</div>${trvBar(m.next===null?100:trvPct(r.cumulative-m.from,m.next-m.from),TRV_FAM.stones,true)}</div>`;
@@ -740,7 +742,7 @@ function trvFillRender(e,s,r,tok){trvFillSkipCheck();let h='',ctx=trvFillClosene
  let rows=trvFillSort(r.details.filter(d=>d&&typeof d.person_id==='string'&&typeof d.name==='string'&&Array.isArray(d.fields)),ctx).flatMap(d=>d.fields.filter(f=>TRV_FILL_FIELDS.includes(f)).map(f=>[d,f])).filter(([d,f])=>!trvFillSkipped.has(trvFillSkipKey(f,d.person_id))).slice(0,10);
  if(rows.length)h+=`<h3 class="trv-h">${esc(TRV_FILL.more)}</h3><div class="card">`+rows.map(([d,f],i)=>`<div class="trv-fill-item"><span class="trv-near-t"><b>${esc(trvFillLabel(f).row(d.name))}</b>${ctx.known?`<small>${esc(trvFillKin(d.person_id,ctx))}</small>`:''}</span><div class="trv-fill-actions"><button type="button" class="trv-fillrow" data-i="${i}" aria-label="${esc(TRV_FILL.toCardOf(d.name)+': '+trvFillLabel(f).label)}">${esc(TRV_FILL.toCard)}</button><button type="button" class="trv-skip" data-skip-i="${i}" aria-label="${esc('דלג: '+trvFillLabel(f).row(d.name))}">דלג</button></div></div>`).join('')+`</div>`;
  if(!miss[0]&&!rows.length)h+=`<div class="card center muted">${esc(trvFillSkipped.size?'אין עוד הצעות כרגע. אפשר להחזיר את ההצעות שדילגתם.':TRV_FILL.pend.empty)}</div>`;
- if(trvNum(r.fills)&&trvNum(r.fills_target)&&r.fills_target>0){let l=Math.max(0,r.fills_target-r.fills);h+=`<div class="card"><b>${esc(TRV_FILL.fillsDone(r.fills))}</b>${l?`<p class="muted">${esc(TRV_FILL.fillsLeft(l))}</p>`:''}${trvBar(trvPct(r.fills,r.fills_target),TRV_FILL.medalRow,true)}</div>`}
+ if(trvNum(r.fills)&&trvNum(r.fills_target)&&r.fills_target>0){let l=Math.max(0,r.fills_target-r.fills);h+=`<div class="card"><b>${esc(TRV_FILL.fillsDone(r.fills))}</b>${l?`<p class="muted">${esc(r.fills_target===100?TRV_FILL.fillsLeftTo(l,TRV_FAM.medal.tree_fills_100):TRV_FILL.fillsLeft(l))}</p>`:''}${trvBar(trvPct(r.fills,r.fills_target),TRV_FILL.medalRow,true)}</div>`}
 
  h+=`<p class="muted center" id="trvSkipStatus" role="status"></p>`;if(trvFillSkipped.size)h+='<button type="button" class="btn ghost trv-full" id="trvSkipRestore">להחזיר הצעות שדילגתי</button>';h+=`<p class="muted center">${esc(TRV_FILL.notice)}</p>`;
  let b=e.querySelector('#trvFillBody');if(!b)return;b.className='';b.innerHTML=h;
