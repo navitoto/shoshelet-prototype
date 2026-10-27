@@ -221,10 +221,10 @@ function layout(model,rootId,opts){
   const tags=[];const nm=id=>M.byId.get(id).full_name;
   if(par.length){const f=parentNodes.get(par[0].pid),l=parentNodes.get(par[par.length-1].pid);tags.push({x:(f.x+l.x+l.w)/2,y:f.y+f.h+C.ROW_GAP*0.5,text:'ההורים של '+nm(rootId)})}
   ancTags.forEach(t=>{const n=t.node;tags.push({x:n.x+n.w/2,y:n.y-C.ROW_GAP*(hasUncles&&n.gen===-1?0.78:0.5),text:'ההורים של '+nm(t.pid)})});
-  const unclesChip=hasUncles?{x:rootNode.x+rootNode.w/2,y:rowY(-1)-36,w:92,h:30,open:unclesOpen,kind:'uncles',label:'דודים'}:null;
-  const nephewsChip=hasNephews?{x:(Math.min(...sibWithKids.map(s=>s.x))+Math.max(...sibWithKids.map(s=>s.x+s.w)))/2,y:rowY(1)-36,w:104,h:30,open:nephewsOpen,kind:'nephews',label:'אחיינים'}:null;
+  const unclesChip=hasUncles?{x:rootNode.x+rootNode.w/2,y:rowY(-1)-36,w:92,h:30,open:unclesOpen,kind:'uncles',label:'דודים',count:new Set(uncleCandidates.flat()).size}:null;
+  const nephewsChip=hasNephews?{x:(Math.min(...sibWithKids.map(s=>s.x))+Math.max(...sibWithKids.map(s=>s.x+s.w)))/2,y:rowY(1)-36,w:104,h:30,open:nephewsOpen,kind:'nephews',label:'אחיינים',count:new Set(sibWithKids.flatMap(s=>s.kids)).size}:null;
   const uncleNodes=uncleKids.map(o=>parentNodes.get(o.u.id)).filter(Boolean);
-  const cousinsChip=(unclesOpen&&hasCousins&&uncleNodes.length)?{x:(Math.min(...uncleNodes.map(n=>n.x))+Math.max(...uncleNodes.map(n=>n.x+n.w)))/2,y:rowY(0)-36,w:112,h:30,open:cousinsOpen,kind:'cousins',label:'בני דודים'}:null;
+  const cousinsChip=(unclesOpen&&hasCousins&&uncleNodes.length)?{x:(Math.min(...uncleNodes.map(n=>n.x))+Math.max(...uncleNodes.map(n=>n.x+n.w)))/2,y:rowY(0)-36,w:112,h:30,open:cousinsOpen,kind:'cousins',label:'בני דודים',count:new Set(uncleKids.flatMap(o=>o.u.kids)).size}:null;
   const chips=[unclesChip,nephewsChip,cousinsChip].filter(Boolean);
   // bounds
   let minX=Infinity,maxX=-Infinity,maxY=0;
@@ -266,6 +266,27 @@ function html(model,L){
   const tg=(L.tags||[]).map(t=>`<div class="tv-tag" style="left:${mx(t.x)}px;top:${t.y}px">${esc(t.text)}</div>`).join('');
   const chip=(L.chips||[]).map(c=>`<button type="button" class="tv-uncles" data-tv-chip="${c.kind}"${c.kind==='uncles'?' data-tv-uncles':''} aria-expanded="${c.open}" style="left:${mx(c.x+c.w/2,0)}px;top:${c.y}px;width:${c.w}px;height:${c.h}px">${c.open?'− '+c.label:'+ '+c.label}</button>`).join('');
   return`<div class="tv-canvas" style="width:${L.W}px;height:${L.H}px"><svg width="${L.W}" height="${L.H}" aria-hidden="true">${svg}</svg>${tg}${nd}${gr}${chip}</div>`;
+}
+
+/* Static drawing of a layout for PDF export: pure SVG (no HTML), same geometry and colours as html().
+   Closed chips become plain labels with counts; open chips are omitted. No interaction hints. */
+function wrapName(t,max=12){const w=String(t||'').trim().split(/\s+/),out=[];let cur='';for(const x of w){if(cur&&(cur+' '+x).length>max){out.push(cur);cur=x}else cur=cur?cur+' '+x:x}if(cur)out.push(cur);if(out.length>3){out.length=3;out[2]=out[2].slice(0,Math.max(1,max-1))+'…'}return out}
+function svg(model,L){
+  const FONT='font-family="Arial, \'Noto Sans Hebrew\', Helvetica, sans-serif"';
+  const mx=(x,w)=>L.W-x-(w||0);
+  let o=L.lines.map(l=>{const q=l.pts.map(p=>[mx(p[0]),p[1]]);const d=l.curve?`M${q[0][0]},${q[0][1]} C${q[0][0]},${q[0][1]+(q[1][1]-q[0][1])*0.3} ${q[1][0]},${q[1][1]-(q[1][1]-q[0][1])*0.7} ${q[1][0]},${q[1][1]}`:rounded(q,16);return`<path d="${d}" fill="none" stroke="#C9A227" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" opacity="${l.dashed?.7:.95}"${l.dashed?' stroke-dasharray="4 4"':''}/>`}).join('');
+  o+=L.hearts.map(h=>`<text x="${mx(h.x)}" y="${h.y+4}" text-anchor="middle" ${FONT} font-size="12" fill="#C9A227">♥</text>`).join('');
+  o+=(L.tags||[]).map(t=>{const w=String(t.text).length*5.4+14,x=mx(t.x);return`<rect x="${x-w/2}" y="${t.y-9}" width="${w}" height="18" rx="9" fill="#F7F4EB"/><text x="${x}" y="${t.y+3.5}" text-anchor="middle" ${FONT} font-size="10" font-weight="700" fill="#6b7d73">${esc(t.text)}</text>`}).join('');
+  o+=L.nodes.map(n=>{const p=model.byId.get(n.id),root=!!n.isRoot,sp=!!n.spouse,sc=sp?.88:1,x=mx(n.x,n.w),cx=x+n.w/2,cy=n.y+n.h/2;
+    const fill=root?'#0C5A44':sp?'#F3E9C6':'#fffdfa',stroke=root?'#0C5A44':sp?'#C9A227':'#e3dfd0',tc=root?'#F7F4EB':'#0C3B2E';
+    const lines=wrapName(p.full_name);
+    let g=`<g transform="translate(${cx} ${cy}) scale(${sc}) translate(${-n.w/2} ${-n.h/2})"><rect x=".5" y=".5" width="${n.w-1}" height="${n.h-1}" rx="14" fill="${fill}" stroke="${stroke}"/><circle cx="${n.w/2}" cy="28" r="18" fill="${root?'#ffffff2e':nameColor(p.full_name)}"/><text x="${n.w/2}" y="33.5" text-anchor="middle" ${FONT} font-size="15" font-weight="800" fill="${root?'#F7F4EB':'#0C5A44'}">${esc(initials(p.full_name))}</text>`;
+    lines.forEach((l,i)=>{g+=`<text x="${n.w/2}" y="${64+i*13.2}" text-anchor="middle" ${FONT} font-size="11.5" font-weight="700" fill="${tc}">${esc(l)}</text>`});
+    if(n.label)g+=`<text x="${n.w/2}" y="${64+lines.length*13.2+4}" text-anchor="middle" ${FONT} font-size="10" fill="${root?'#cfe3d8':'#78867f'}">${esc(n.label)}</text>`;
+    return g+'</g>'}).join('');
+  o+=L.groups.map(g=>{const x=mx(g.x,g.w);return`<rect x="${x+.5}" y="${g.y+.5}" width="${g.w-1}" height="${g.h-1}" rx="14" fill="#f1ecdc" stroke="#C9A227" stroke-dasharray="4 3"/><text x="${x+g.w/2}" y="${g.y+g.h/2+5}" text-anchor="middle" ${FONT} font-size="13" font-weight="700" fill="#0C3B2E">${esc(g.label)}</text>`}).join('');
+  o+=(L.chips||[]).filter(c=>!c.open).map(c=>{const x=mx(c.x+c.w/2,0),lab=c.label+': '+c.count,w=Math.max(c.w,lab.length*7+22);return`<rect x="${x+.5-w/2}" y="${c.y+.5}" width="${w-1}" height="${c.h-1}" rx="15" fill="#fffdfa" stroke="#C9A227"/><text x="${x}" y="${c.y+c.h/2+4}" text-anchor="middle" ${FONT} font-size="12" font-weight="700" fill="#0C3B2E">${esc(lab)}</text>`}).join('');
+  return o;
 }
 
 const CSS=`.tv-uncles{box-sizing:border-box;position:absolute;z-index:2;direction:rtl;border:1px solid #C9A227;border-radius:15px;background:#fffdfa;color:#0C3B2E;font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0 8px}.tv-uncles:focus-visible{outline:2px solid #0C5A44;outline-offset:3px}
@@ -346,6 +367,6 @@ function mount(el,model,rootId,opts){
   paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex,get unclesOpen(){return unclesOpen},get nephewsOpen(){return nephewsOpen},get cousinsOpen(){return cousinsOpen},setImmersive,get immersive(){return immersiveMode}};
 }
 
-const api={C,makeModel,layout,html,mount};
+const api={C,makeModel,layout,html,mount,svg};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.ShosheletTreeView=api;
 })(typeof window!=='undefined'?window:globalThis);
