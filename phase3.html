@@ -677,7 +677,7 @@ knows_branch:'מסיימים חידון עם 5 מתוך 5 תשובות נכונ�
 completed_detail:'מוסיפים פרט חסר דרך \'עזרו לנו להשלים\'',
 profile_photo:'מוסיפים תמונה לכרטיס האישי ושומרים אותה.',
 perfect_week:'מסיימים חידון עם 5 מתוך 5 תשובות נכונות בכל יום, במשך 7 ימים ברצף.',
-family_member:'משלימים 50 פרטים חסרים על קרובי משפחה: עיר מגורים או יום הולדת, דרך "עזרו לנו להשלים". כל פרט נספר פעם אחת, ופרטים בכרטיס שלכם לא נספרים. הספירה מתחילה מיום הוספת המדליה.'};
+family_member:'משלימים 50 פרטים חסרים על קרובי משפחה: עיר מגורים או יום הולדת, דרך "עזרו לנו להשלים". כל פרט נספר פעם אחת, ופרטים בכרטיס שלכם לא נספרים.'};
 let trvMedalDialog=null;
 function trvMedalClose(){if(trvMedalDialog?.open)trvMedalDialog.close()}
 function trvMedalOpen(key,source){let n=Number(key),title=TRV_FAM.medal[key]||TRV_FAM.badge[key]||([500,1000,5000].includes(n)?n.toLocaleString('en-US')+' נקודות':''),text=TRV_MEDAL_HELP[key]||([500,1000,5000].includes(n)?`מגיעים יחד ל-${n.toLocaleString('en-US')} נקודות מכל החידונים שהסתיימו, מאז שהתחלנו לספור.`:'');if(!title||!text)return;
