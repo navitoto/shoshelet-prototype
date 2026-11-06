@@ -140,7 +140,7 @@ begin
         and not exists (select 1 from t_sym s where s.rtype=any(p_types) and ((s.x=r2.a and s.y=any(p_persons)) or (s.x=r2.b and s.y=any(p_persons))))
         and (select count(*) from t_prel q where q.a=r2.a and q.b=r2.b and q.rtype=any(p_types))=1
       order by random() loop
-    update t_bud set n=n-1;
+    update t_bud set n=case when clock_timestamp()>until then 0 else n-1 end;
     if (select n from t_bud)<=0 then return null; end if;
     res:=public.pairs_dfs(p_types,p_k+1,p_persons||c.a||c.b,p_picks||jsonb_build_object('a',c.a,'b',c.b,'t',c.rtype,'s',c.senior));
     if res is not null then return res; end if;
@@ -187,7 +187,7 @@ begin
     return jsonb_build_object('cards',cards,'pairs',picks,'status','built');
   end loop;
   -- complete phase: depth-first search over every 4-type combination with the same pruning (a necessary condition), bounded by a node budget
-  create temp table t_bud(n int) on commit drop; insert into t_bud values (30000);
+  create temp table t_bud(n int, until timestamptz) on commit drop; insert into t_bud values (30000, clock_timestamp()+interval '3 seconds');
   select array_agg(x) into ord from (select x from unnest(avail) x order by random()) z;
   for r in select a.x t1,b.x t2,c.x t3,d.x t4 from unnest(ord) with ordinality a(x,i) join unnest(ord) with ordinality b(x,i) on b.i>a.i join unnest(ord) with ordinality c(x,i) on c.i>b.i join unnest(ord) with ordinality d(x,i) on d.i>c.i order by random() loop
     picks:=public.pairs_dfs(array[r.t1,r.t2,r.t3,r.t4],1,'{}','[]'::jsonb);
