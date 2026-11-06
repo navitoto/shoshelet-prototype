@@ -491,18 +491,23 @@ create or replace function public.pairs_member_check(p_family uuid) returns void
 language plpgsql security definer set search_path=public,pg_temp as $$
 begin if auth.uid() is null or not public.is_family_member(p_family) then raise exception 'not a family member' using errcode='42501'; end if; end $$;
 
+-- The board day for this caller: an unfinished attempt that is still within its 60 seconds keeps its own day across midnight, otherwise today.
+create or replace function public.pairs_active_day(p_family uuid, p_uid uuid, p_at timestamptz) returns date
+language sql stable security definer set search_path=public,pg_temp as $$
+select coalesce((select a.day from public.pairs_attempts a where a.family_id=p_family and a.user_id=p_uid and a.finished_at is null and a.deadline>=p_at order by a.day desc limit 1),(p_at at time zone 'Asia/Jerusalem')::date) $$;
+
 create or replace function public.pairs_state(p_family_id uuid) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare d date:=(now() at time zone 'Asia/Jerusalem')::date;
-begin perform public.pairs_member_check(p_family_id); perform public.pairs_ensure_board(p_family_id,d); return public.pairs_state_internal(p_family_id,d,now(),auth.uid()); end $$;
+declare d date;
+begin perform public.pairs_member_check(p_family_id); d:=public.pairs_active_day(p_family_id,auth.uid(),now()); perform public.pairs_ensure_board(p_family_id,d); return public.pairs_state_internal(p_family_id,d,now(),auth.uid()); end $$;
 create or replace function public.pairs_start(p_family_id uuid) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
 declare d date:=(now() at time zone 'Asia/Jerusalem')::date;
-begin perform public.pairs_member_check(p_family_id); return public.pairs_start_internal(p_family_id,d,now(),auth.uid()); end $$;
+begin perform public.pairs_member_check(p_family_id); d:=public.pairs_active_day(p_family_id,auth.uid(),now()); return public.pairs_start_internal(p_family_id,d,now(),auth.uid()); end $$;
 create or replace function public.pairs_pick(p_family_id uuid, p_a uuid, p_b uuid) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare d date:=(now() at time zone 'Asia/Jerusalem')::date;
-begin perform public.pairs_member_check(p_family_id); return public.pairs_pick_internal(p_family_id,d,now(),auth.uid(),p_a,p_b); end $$;
+declare d date;
+begin perform public.pairs_member_check(p_family_id); d:=public.pairs_active_day(p_family_id,auth.uid(),now()); return public.pairs_pick_internal(p_family_id,d,now(),auth.uid(),p_a,p_b); end $$;
 create or replace function public.pairs_rankings(p_family_id uuid) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
 begin perform public.pairs_member_check(p_family_id); return public.pairs_rankings_internal(p_family_id,now()); end $$;
