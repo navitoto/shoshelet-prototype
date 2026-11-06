@@ -126,13 +126,35 @@ begin
   return n=4 and bad=0;
 end $$;
 
+-- Depth-first step for the complete phase. Returns the 4 picks or null.
+create or replace function public.pairs_dfs(p_types text[], p_k int, p_persons uuid[], p_picks jsonb) returns jsonb
+language plpgsql security definer set search_path=public,pg_temp as $$
+declare c record; res jsonb;
+begin
+  if p_k>4 then
+    if (select count(*) from t_prel q where q.a=any(p_persons) and q.b=any(p_persons) and q.rtype=any(p_types))=4 then return p_picks; end if;
+    return null;
+  end if;
+  for c in select r2.a,r2.b,r2.rtype,r2.senior from t_prel r2
+      where r2.intended and r2.rtype=p_types[p_k] and not (r2.a=any(p_persons)) and not (r2.b=any(p_persons))
+        and not exists (select 1 from t_sym s where s.rtype=any(p_types) and ((s.x=r2.a and s.y=any(p_persons)) or (s.x=r2.b and s.y=any(p_persons))))
+        and (select count(*) from t_prel q where q.a=r2.a and q.b=r2.b and q.rtype=any(p_types))=1
+      order by random() loop
+    update t_bud set n=n-1;
+    if (select n from t_bud)<=0 then return null; end if;
+    res:=public.pairs_dfs(p_types,p_k+1,p_persons||c.a||c.b,p_picks||jsonb_build_object('a',c.a,'b',c.b,'t',c.rtype,'s',c.senior));
+    if res is not null then return res; end if;
+  end loop;
+  return null;
+end $$;
+
 -- Builds one board or an empty marker when no unambiguous board exists. Nothing is stored here.
 -- Sequential construction: types are shuffled, then each pair must be intended, unused, and unrelated (under the chosen types) to every person already placed.
 create or replace function public.pairs_build_board(p_family uuid, p_day date) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare avail text[]; types text[]; ord text[]; persons uuid[]; picks jsonb; k int; cnt int; cards jsonb; tries int:=300; tt text; r record; t int;
+declare avail text[]; types text[]; ord text[]; persons uuid[]; picks jsonb; k int; cnt int; cards jsonb; tries int:=60; tt text; r record; t int;
 begin
-  drop table if exists pg_temp.t_prel; drop table if exists pg_temp.t_prec; drop table if exists pg_temp.t_sym;
+  drop table if exists pg_temp.t_prel; drop table if exists pg_temp.t_prec; drop table if exists pg_temp.t_sym; drop table if exists pg_temp.t_bud;
   create temp table t_prel on commit drop as select * from public.pairs_relations(p_family);
   create temp table t_sym on commit drop as select a x,b y,rtype from t_prel union all select b,a,rtype from t_prel;
   create index on t_sym(x,rtype); create index on t_sym(y,rtype);
@@ -141,7 +163,7 @@ begin
     select (e->>'a')::uuid a,(e->>'b')::uuid b,e->>'t' t from public.pairs_boards bd, jsonb_array_elements(bd.pairs) e
     where bd.family_id=p_family and bd.day<p_day and bd.day>=p_day-21;
   select array_agg(distinct rtype) into avail from t_prel where intended;
-  if avail is null or cardinality(avail)<4 then return jsonb_build_object('cards','[]'::jsonb,'pairs','[]'::jsonb); end if;
+  if avail is null or cardinality(avail)<4 then return jsonb_build_object('cards','[]'::jsonb,'pairs','[]'::jsonb,'status','proven_none'); end if;
   for t in 1..tries loop
     select array_agg(x) into types from (select x from unnest(avail) x order by random() limit 4) z;
     persons:='{}'; picks:='[]'::jsonb;
@@ -162,27 +184,33 @@ begin
     select count(*) into cnt from t_prel q where q.a=any(persons) and q.b=any(persons) and q.rtype=any(types);
     continue when cnt<>4;
     select jsonb_agg(x order by random()) into cards from unnest(persons) x;
-    return jsonb_build_object('cards',cards,'pairs',picks);
+    return jsonb_build_object('cards',cards,'pairs',picks,'status','built');
   end loop;
-  return jsonb_build_object('cards','[]'::jsonb,'pairs','[]'::jsonb);
+  -- complete phase: depth-first search over every 4-type combination with the same pruning (a necessary condition), bounded by a node budget
+  create temp table t_bud(n int) on commit drop; insert into t_bud values (30000);
+  select array_agg(x) into ord from (select x from unnest(avail) x order by random()) z;
+  for r in select a.x t1,b.x t2,c.x t3,d.x t4 from unnest(ord) with ordinality a(x,i) join unnest(ord) with ordinality b(x,i) on b.i>a.i join unnest(ord) with ordinality c(x,i) on c.i>b.i join unnest(ord) with ordinality d(x,i) on d.i>c.i order by random() loop
+    picks:=public.pairs_dfs(array[r.t1,r.t2,r.t3,r.t4],1,'{}','[]'::jsonb);
+    if picks is not null then
+      select array_agg(x) into persons from (select (e->>'a')::uuid x from jsonb_array_elements(picks) e union all select (e->>'b')::uuid from jsonb_array_elements(picks) e) z;
+      select jsonb_agg(x order by random()) into cards from unnest(persons) x;
+      return jsonb_build_object('cards',cards,'pairs',picks,'status','built');
+    end if;
+    exit when (select n from t_bud)<=0;
+  end loop;
+  return jsonb_build_object('cards','[]'::jsonb,'pairs','[]'::jsonb,'status',case when (select n from t_bud)<=0 then 'budget_exhausted' else 'proven_none' end);
 end $$;
 
 create or replace function public.pairs_ensure_board(p_family uuid, p_day date) returns void
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare b jsonb; ex public.pairs_boards;
+declare b jsonb;
 begin
-  select * into ex from public.pairs_boards where family_id=p_family and day=p_day;
-  if found and not (jsonb_array_length(ex.pairs)=0 and ex.built_at<now()-interval '60 minutes'
-                    and not exists (select 1 from public.pairs_attempts a where a.family_id=p_family and a.day=p_day)) then return; end if;
+  if exists (select 1 from public.pairs_boards where family_id=p_family and day=p_day) then return; end if;
   perform pg_advisory_xact_lock(hashtextextended('pairs'||p_family::text||p_day::text,0));
-  select * into ex from public.pairs_boards where family_id=p_family and day=p_day;
-  if found and not (jsonb_array_length(ex.pairs)=0 and ex.built_at<now()-interval '60 minutes'
-                    and not exists (select 1 from public.pairs_attempts a where a.family_id=p_family and a.day=p_day)) then return; end if;
+  if exists (select 1 from public.pairs_boards where family_id=p_family and day=p_day) then return; end if;
   b:=public.pairs_build_board(p_family,p_day);
-  insert into public.pairs_boards(family_id,day,cards,pairs) values (p_family,p_day,b->'cards',b->'pairs')
-  on conflict (family_id,day) do update set cards=excluded.cards,pairs=excluded.pairs,built_at=now(),void=false
-  where jsonb_array_length(public.pairs_boards.pairs)=0 and not exists (select 1 from public.pairs_attempts a where a.family_id=public.pairs_boards.family_id and a.day=public.pairs_boards.day);
-  insert into public.pairs_build_log(family_id,day,status,message) values (p_family,p_day,case when jsonb_array_length(b->'pairs')=4 then 'built' else 'empty' end,null);
+  insert into public.pairs_boards(family_id,day,cards,pairs) values (p_family,p_day,b->'cards',b->'pairs') on conflict (family_id,day) do nothing;
+  insert into public.pairs_build_log(family_id,day,status,message) values (p_family,p_day,b->>'status',null);
 end $$;
 
 -- Nightly preparation for tomorrow. Same families as the trivia job, plus families that already played this game.
