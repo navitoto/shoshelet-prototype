@@ -51,11 +51,11 @@ alter table public.pairs_awards enable row level security;
 alter table public.pairs_build_log enable row level security;
 revoke all on public.pairs_boards, public.pairs_attempts, public.pairs_awards, public.pairs_build_log from public, anon, authenticated;
 
--- The streak start is fixed once, when the migration is applied: the first full Jerusalem day after deployment.
+-- The streak start is fixed once, when the migration is applied: the Jerusalem day on which it is applied, so a legitimate 4/4 on release day counts.
 create table if not exists public.pairs_settings (k text primary key, v text not null);
 alter table public.pairs_settings enable row level security;
 revoke all on public.pairs_settings from public, anon, authenticated;
-insert into public.pairs_settings(k,v) values ('streak_start', ((now() at time zone 'Asia/Jerusalem')::date+1)::text) on conflict (k) do nothing;
+insert into public.pairs_settings(k,v) values ('streak_start', ((now() at time zone 'Asia/Jerusalem')::date)::text) on conflict (k) do nothing;
 
 create or replace function public.pairs_config() returns jsonb
 language sql stable set search_path=public,pg_temp as
