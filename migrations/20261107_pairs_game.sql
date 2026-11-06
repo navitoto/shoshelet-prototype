@@ -234,7 +234,10 @@ begin
   for f in select family_id from (
       select family_id from public.trivia_sets where day>=d-8
       union select family_id from public.trivia_attempts where day>=d-8
-      union select family_id from public.pairs_boards where day>=d-8) x loop
+      union select family_id from public.pairs_boards where day>=d-8) x
+    where not exists (select 1 from public.pairs_boards b where b.family_id=x.family_id and b.day=d and b.status in ('built','proven_none'))
+    -- fair order: never-tried families first, then the least recently tried (errors and deferred retries go to the back), so repeated failures cannot starve later families
+    order by coalesce((select max(l.at) from public.pairs_build_log l where l.family_id=x.family_id and l.day=d),'-infinity'::timestamptz) loop
     -- stop before any statement timeout; the next scheduled slot continues (families with a board are skipped)
     exit when clock_timestamp()>t0+interval '90 seconds';
     begin
