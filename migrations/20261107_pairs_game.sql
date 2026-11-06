@@ -129,7 +129,7 @@ end $$;
 -- Builds one board or an empty marker when no unambiguous board exists. Nothing is stored here.
 create or replace function public.pairs_build_board(p_family uuid, p_day date) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare avail text[]; types text[]; persons uuid[]; picks jsonb; i int; cnt int; cards jsonb; tries int:=500;
+declare avail text[]; types text[]; persons uuid[]; picks jsonb; i int; cnt int; cards jsonb; tries int:=2000;
 begin
   drop table if exists pg_temp.t_prel; drop table if exists pg_temp.t_prec;
   create temp table t_prel on commit drop as select * from public.pairs_relations(p_family);
@@ -197,7 +197,7 @@ end $$;
 -- Health for the existing monitoring: families that should have a board for the given day but do not, and recent build errors.
 create or replace function public.pairs_health(p_day date default null) returns jsonb
 language sql stable security definer set search_path=public,pg_temp as $$
-with d as (select coalesce(p_day,(now() at time zone 'Asia/Jerusalem')::date) day),
+with d as (select coalesce(p_day,(now() at time zone 'Asia/Jerusalem')::date) as day),
 fam as (select distinct family_id from public.trivia_sets s,d where s.day>=d.day-8 union select family_id from public.pairs_boards b,d where b.day>=d.day-8)
 select jsonb_build_object('day',(select day from d),
  'families_without_board',(select count(*) from fam f,d where not exists (select 1 from public.pairs_boards b where b.family_id=f.family_id and b.day=d.day)),
@@ -419,7 +419,7 @@ end $$;
 
 create or replace function public.pairs_medals_internal(p_family uuid, p_uid uuid, p_at timestamptz) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare cfg jsonb:=public.pairs_config(); d date:=(p_at at time zone 'Asia/Jerusalem')::date; aw public.pairs_awards; streak int:=0; last_day date;
+declare cfg jsonb:=public.pairs_config(); d date:=(p_at at time zone 'Asia/Jerusalem')::date; aw public.pairs_awards; streak int:=0; lastd date;
 begin
   update public.pairs_attempts set finished_at=deadline,end_reason='timeout'
    where family_id=p_family and user_id=p_uid and finished_at is null and p_at>deadline+make_interval(secs=>(cfg->>'grace_seconds')::int);
@@ -428,8 +428,8 @@ begin
   with perfect as (select a.day from public.pairs_attempts a where a.family_id=p_family and a.user_id=p_uid and a.finished_at is not null and a.end_reason='complete' and jsonb_array_length(a.solved)=4 and a.day>=(cfg->>'streak_start')::date and a.day<=d),
   runs as (select day, day-(row_number() over (order by day))::int grp from perfect),
   lastrun as (select count(*) n, max(day) last_day from runs group by grp order by max(day) desc limit 1)
-  select n, last_day into streak, last_day from lastrun;
-  if last_day is null or last_day<d-1 then streak:=0; end if;
+  select n, last_day into streak, lastd from lastrun;
+  if lastd is null or lastd<d-1 then streak:=0; end if;
   return jsonb_build_object('awarded',aw.user_id is not null,'run_start',aw.run_start,'run_end',aw.run_end,'streak',least(coalesce(streak,0),(cfg->>'streak_days')::int),'target',(cfg->>'streak_days')::int);
 end $$;
 
