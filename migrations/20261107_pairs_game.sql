@@ -228,13 +228,15 @@ end $$;
 -- Nightly preparation for tomorrow. Same families as the trivia job, plus families that already played this game.
 create or replace function public.pairs_prepare_next() returns int
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare f record; d date; n int:=0;
+declare f record; d date; n int:=0; t0 timestamptz:=clock_timestamp();
 begin
   d:=(now() at time zone 'Asia/Jerusalem')::date+1;
   for f in select family_id from (
       select family_id from public.trivia_sets where day>=d-8
       union select family_id from public.trivia_attempts where day>=d-8
       union select family_id from public.pairs_boards where day>=d-8) x loop
+    -- stop before any statement timeout; the next scheduled slot continues (families with a board are skipped)
+    exit when clock_timestamp()>t0+interval '90 seconds';
     begin
       perform public.pairs_ensure_board(f.family_id,d); n:=n+1;
     exception when others then
