@@ -12,6 +12,8 @@ create table if not exists public.pairs_boards (
   pairs jsonb not null default '[]'::jsonb,   -- [{a,b,t,s}] a<b, t=relation type, s=senior person for directional types
   void boolean not null default false,        -- set when a started board can no longer be shown safely
   built_at timestamptz not null default now(),
+  status text not null default 'built',        -- built | proven_none | deferred (search budget ran out; retried after retry_after)
+  retry_after timestamptz,
   primary key (family_id, day)
 );
 create table if not exists public.pairs_attempts (
@@ -203,17 +205,24 @@ end $$;
 
 create or replace function public.pairs_ensure_board(p_family uuid, p_day date) returns void
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare b jsonb;
+declare b jsonb; ex public.pairs_boards; st text;
 begin
-  if exists (select 1 from public.pairs_boards where family_id=p_family and day=p_day) then return; end if;
-  perform pg_advisory_xact_lock(hashtextextended('pairs'||p_family::text||p_day::text,0));
-  if exists (select 1 from public.pairs_boards where family_id=p_family and day=p_day) then return; end if;
-  b:=public.pairs_build_board(p_family,p_day);
-  -- budget_exhausted is a preparation failure, not proof: store nothing so the next open or the nightly job tries again
-  if b->>'status' in ('built','proven_none') then
-    insert into public.pairs_boards(family_id,day,cards,pairs) values (p_family,p_day,b->'cards',b->'pairs') on conflict (family_id,day) do nothing;
+  select * into ex from public.pairs_boards where family_id=p_family and day=p_day;
+  if found and not (ex.status='deferred' and ex.retry_after<=now()) then return; end if;
+  -- never wait behind another builder: the other call stores the result and this caller reports "preparing"
+  if not pg_try_advisory_xact_lock(hashtextextended('pairs'||p_family::text||p_day::text,0)) then return; end if;
+  select * into ex from public.pairs_boards where family_id=p_family and day=p_day;
+  if found and not (ex.status='deferred' and ex.retry_after<=now()) then return; end if;
+  b:=public.pairs_build_board(p_family,p_day); st:=b->>'status';
+  if st in ('built','proven_none') then
+    insert into public.pairs_boards(family_id,day,cards,pairs,status) values (p_family,p_day,b->'cards',b->'pairs',st)
+    on conflict (family_id,day) do update set cards=excluded.cards,pairs=excluded.pairs,status=excluded.status,retry_after=null,built_at=now();
+  else
+    -- search budget ran out: not proof. Keep a deferred marker so concurrent opens do not rebuild; one bounded retry per 2 minutes.
+    insert into public.pairs_boards(family_id,day,cards,pairs,status,retry_after) values (p_family,p_day,'[]','[]','deferred',now()+interval '2 minutes')
+    on conflict (family_id,day) do update set retry_after=excluded.retry_after;
   end if;
-  insert into public.pairs_build_log(family_id,day,status,message) values (p_family,p_day,b->>'status',null);
+  insert into public.pairs_build_log(family_id,day,status,message) values (p_family,p_day,st,null);
 end $$;
 
 -- Nightly preparation for tomorrow. Same families as the trivia job, plus families that already played this game.
@@ -242,7 +251,8 @@ with d as (select coalesce(p_day,(now() at time zone 'Asia/Jerusalem')::date) as
 fam as (select distinct family_id from public.trivia_sets s,d where s.day>=d.day-8 union select family_id from public.pairs_boards b,d where b.day>=d.day-8)
 select jsonb_build_object('day',(select day from d),
  'families_without_board',(select count(*) from fam f,d where not exists (select 1 from public.pairs_boards b where b.family_id=f.family_id and b.day=d.day)),
- 'empty_boards',(select count(*) from public.pairs_boards b,d where b.day=d.day and jsonb_array_length(b.pairs)=0),
+ 'empty_boards',(select count(*) from public.pairs_boards b,d where b.day=d.day and b.status='proven_none'),
+ 'deferred_boards',(select count(*) from public.pairs_boards b,d where b.day=d.day and b.status='deferred'),
  'budget_exhausted_last_day',(select count(*) from public.pairs_build_log l where l.status='budget_exhausted' and l.at>now()-interval '1 day'),
  'errors_last_day',(select count(*) from public.pairs_build_log l where l.status='error' and l.at>now()-interval '1 day'))
 $$;
@@ -336,7 +346,7 @@ declare cfg jsonb:=public.pairs_config(); b public.pairs_boards; a public.pairs_
 begin
   grace:=make_interval(secs=>(cfg->>'grace_seconds')::int);
   select * into b from public.pairs_boards where family_id=p_family and day=p_day;
-  if not found then return jsonb_build_object('day',p_day,'phase','preparing'); end if;
+  if not found or b.status='deferred' then return jsonb_build_object('day',p_day,'phase','preparing'); end if;
   if jsonb_array_length(b.pairs)=0 then return jsonb_build_object('day',p_day,'phase','empty'); end if;
   select * into a from public.pairs_attempts where family_id=p_family and day=p_day and user_id=p_uid for update;
   if not found then
