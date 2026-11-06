@@ -209,7 +209,10 @@ begin
   perform pg_advisory_xact_lock(hashtextextended('pairs'||p_family::text||p_day::text,0));
   if exists (select 1 from public.pairs_boards where family_id=p_family and day=p_day) then return; end if;
   b:=public.pairs_build_board(p_family,p_day);
-  insert into public.pairs_boards(family_id,day,cards,pairs) values (p_family,p_day,b->'cards',b->'pairs') on conflict (family_id,day) do nothing;
+  -- budget_exhausted is a preparation failure, not proof: store nothing so the next open or the nightly job tries again
+  if b->>'status' in ('built','proven_none') then
+    insert into public.pairs_boards(family_id,day,cards,pairs) values (p_family,p_day,b->'cards',b->'pairs') on conflict (family_id,day) do nothing;
+  end if;
   insert into public.pairs_build_log(family_id,day,status,message) values (p_family,p_day,b->>'status',null);
 end $$;
 
@@ -240,6 +243,7 @@ fam as (select distinct family_id from public.trivia_sets s,d where s.day>=d.day
 select jsonb_build_object('day',(select day from d),
  'families_without_board',(select count(*) from fam f,d where not exists (select 1 from public.pairs_boards b where b.family_id=f.family_id and b.day=d.day)),
  'empty_boards',(select count(*) from public.pairs_boards b,d where b.day=d.day and jsonb_array_length(b.pairs)=0),
+ 'budget_exhausted_last_day',(select count(*) from public.pairs_build_log l where l.status='budget_exhausted' and l.at>now()-interval '1 day'),
  'errors_last_day',(select count(*) from public.pairs_build_log l where l.status='error' and l.at>now()-interval '1 day'))
 $$;
 
@@ -332,7 +336,8 @@ declare cfg jsonb:=public.pairs_config(); b public.pairs_boards; a public.pairs_
 begin
   grace:=make_interval(secs=>(cfg->>'grace_seconds')::int);
   select * into b from public.pairs_boards where family_id=p_family and day=p_day;
-  if not found or jsonb_array_length(b.pairs)=0 then return jsonb_build_object('day',p_day,'phase','empty'); end if;
+  if not found then return jsonb_build_object('day',p_day,'phase','preparing'); end if;
+  if jsonb_array_length(b.pairs)=0 then return jsonb_build_object('day',p_day,'phase','empty'); end if;
   select * into a from public.pairs_attempts where family_id=p_family and day=p_day and user_id=p_uid for update;
   if not found then
     if b.void then return jsonb_build_object('day',p_day,'phase','unavailable'); end if;
