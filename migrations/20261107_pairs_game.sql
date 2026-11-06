@@ -51,7 +51,7 @@ revoke all on public.pairs_boards, public.pairs_attempts, public.pairs_awards, p
 
 create or replace function public.pairs_config() returns jsonb
 language sql immutable set search_path=public,pg_temp as
-$$ select jsonb_build_object('seconds',60,'grace_seconds',2,'pairs',4,'streak_days',7,'streak_start','2026-11-07','tz','Asia/Jerusalem') $$;
+$$ select jsonb_build_object('seconds',60,'grace_seconds',0,'pairs',4,'streak_days',7,'streak_start','2026-11-07','tz','Asia/Jerusalem') $$;
 
 -- Every relation between two people that the game can ask about. Endpoints must have a unique full name in the family.
 -- Paths may go through people who are not eligible. "intended" = may be the answer of a board; the rest only blocks ambiguity.
@@ -127,29 +127,39 @@ begin
 end $$;
 
 -- Builds one board or an empty marker when no unambiguous board exists. Nothing is stored here.
+-- Sequential construction: types are shuffled, then each pair must be intended, unused, and unrelated (under the chosen types) to every person already placed.
 create or replace function public.pairs_build_board(p_family uuid, p_day date) returns jsonb
 language plpgsql security definer set search_path=public,pg_temp as $$
-declare avail text[]; types text[]; persons uuid[]; picks jsonb; i int; cnt int; cards jsonb; tries int:=2000;
+declare avail text[]; types text[]; ord text[]; persons uuid[]; picks jsonb; k int; cnt int; cards jsonb; tries int:=300; tt text; r record; t int;
 begin
-  drop table if exists pg_temp.t_prel; drop table if exists pg_temp.t_prec;
+  drop table if exists pg_temp.t_prel; drop table if exists pg_temp.t_prec; drop table if exists pg_temp.t_sym;
   create temp table t_prel on commit drop as select * from public.pairs_relations(p_family);
-  analyze pg_temp.t_prel;
+  create temp table t_sym on commit drop as select a x,b y,rtype from t_prel union all select b,a,rtype from t_prel;
+  create index on t_sym(x,rtype); create index on t_sym(y,rtype);
+  analyze pg_temp.t_prel; analyze pg_temp.t_sym;
   create temp table t_prec on commit drop as
     select (e->>'a')::uuid a,(e->>'b')::uuid b,e->>'t' t from public.pairs_boards bd, jsonb_array_elements(bd.pairs) e
     where bd.family_id=p_family and bd.day<p_day and bd.day>=p_day-21;
   select array_agg(distinct rtype) into avail from t_prel where intended;
   if avail is null or cardinality(avail)<4 then return jsonb_build_object('cards','[]'::jsonb,'pairs','[]'::jsonb); end if;
-  for i in 1..tries loop
-    select array_agg(t) into types from (select t from unnest(avail) t order by random() limit 4) z;
-    select jsonb_agg(jsonb_build_object('a',a,'b',b,'t',rtype,'s',senior)) into picks from (
-      select distinct on (r.rtype) r.a,r.b,r.rtype,r.senior from t_prel r
-      where r.intended and r.rtype=any(types)
-        and (i>250 or not exists (select 1 from t_prec c where c.a=r.a and c.b=r.b and c.t=r.rtype))
-      order by r.rtype, random()) z;
-    continue when picks is null or jsonb_array_length(picks)<>4;
-    select array_agg(x) into persons from (select (e->>'a')::uuid x from jsonb_array_elements(picks) e union all select (e->>'b')::uuid from jsonb_array_elements(picks) e) z;
-    continue when (select count(distinct x) from unnest(persons) x)<>8;
-    select count(*) into cnt from t_prel r where r.a=any(persons) and r.b=any(persons) and r.rtype=any(types);
+  for t in 1..tries loop
+    select array_agg(x) into types from (select x from unnest(avail) x order by random() limit 4) z;
+    persons:='{}'; picks:='[]'::jsonb;
+    for k in 1..4 loop
+      tt:=types[k];
+      select r2.a,r2.b,r2.rtype,r2.senior into r from t_prel r2
+      where r2.intended and r2.rtype=tt and not (r2.a=any(persons)) and not (r2.b=any(persons))
+        and (t>150 or not exists (select 1 from t_prec c where c.a=r2.a and c.b=r2.b and c.t=r2.rtype))
+        and not exists (select 1 from t_sym s where s.rtype=any(types) and ((s.x=r2.a and s.y=any(persons)) or (s.x=r2.b and s.y=any(persons))))
+        and (select count(*) from t_prel q where q.a=r2.a and q.b=r2.b and q.rtype=any(types))=1
+      order by random() limit 1;
+      exit when r.a is null;
+      persons:=persons||r.a||r.b;
+      picks:=picks||jsonb_build_object('a',r.a,'b',r.b,'t',r.rtype,'s',r.senior);
+      r:=null;
+    end loop;
+    continue when jsonb_array_length(picks)<>4;
+    select count(*) into cnt from t_prel q where q.a=any(persons) and q.b=any(persons) and q.rtype=any(types);
     continue when cnt<>4;
     select jsonb_agg(x order by random()) into cards from unnest(persons) x;
     return jsonb_build_object('cards',cards,'pairs',picks);
