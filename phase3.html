@@ -1014,7 +1014,7 @@ function prsRender(s){prsStop();let e=trvEl();if(!e)return;
  let t=s.phase==='preparing'?PRS.preparing:s.phase==='unavailable'?PRS.unavail:PRS.empty;
  e.innerHTML=prsHead(PRS.name)+`<p class="center" role="status">${esc(t)}</p><button type="button" class="btn trv-full" id="prsHome">${esc(PRS.toGames)}</button>`;e.querySelector('#prsHome').onclick=gamesHub}
 function prsReady(s){let e=trvEl();e.innerHTML=prsHead(PRS.name)+`<h2 class="center">${esc(PRS.readyTitle)}</h2><ol class="prs-steps">${PRS.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol><p class="center muted">${esc(PRS.readyNote)}</p><button type="button" class="btn trv-full" id="prsStart">${esc(PRS.start)}</button><button type="button" class="link" id="prsHome">${esc(PRS.toGames)}</button>`;
- e.querySelector('#prsHome').onclick=gamesHub;let b=e.querySelector('#prsStart');b.onclick=async()=>{b.disabled=true;try{prsRender(await prsRpc('pairs_start',{}))}catch(x){b.disabled=false;toast(PRS.err)}}}
+ e.querySelector('#prsHome').onclick=gamesHub;let b=e.querySelector('#prsStart');b.onclick=async()=>{b.disabled=true;try{prsRender(await prsRpc('pairs_start',{p_rule:2}))}catch(x){b.disabled=false;toast(PRS.err)}}}
 function prsBoard(s){prsSel=[];prsBusy=false;let e=trvEl(),ep=prsEpoch,end=Date.now()+s.remaining_ms,solvedBy={};
  (s.solved||[]).forEach(z=>{solvedBy[z.a.id]=z;solvedBy[z.b.id]=z});
  let typeIdx={};s.types.forEach((t,i)=>typeIdx[t.idx]=i);
