@@ -34,6 +34,7 @@ function layout(model,rootId,opts){
   const unclesOpen=opts.unclesOpen===true;
   const nephewsOpen=opts.nephewsOpen===true;
   const cousinsOpen=opts.cousinsOpen===true;
+  const cousinKidsOpen=opts.cousinKidsOpen===true;
   // --- down subtrees ---
   function downSub(pid,depth,ctxSeen){
     const sp=M.activeSpouses(pid).filter(s=>!ctxSeen.has(s));
@@ -217,6 +218,26 @@ function layout(model,rootId,opts){
       }
     }
   }
+  // --- children of cousins (proposal) ---
+  const cousinKids=[];
+  nodes.filter(n=>n.cousin).forEach(cn=>{const ks=new Set();for(const k of M.childrenOf(cn.id))if(M.byId.has(k)&&!placed.has(k))ks.add(k);cn.kidsArr=[...ks];if(cn.kidsArr.length)cousinKids.push(cn)});
+  const hasCousinKids=cousinKids.length>0;
+  if(unclesOpen&&cousinsOpen&&cousinKidsOpen&&hasCousinKids){
+    const e=[...nodes.filter(n=>n.gen===1).map(n=>[n.x,n.x+n.w]),...groups.filter(g=>g.gen===1).map(g=>[g.x,g.x+g.w])];
+    const k1L=e.length?Math.min(...e.map(q=>q[0])):rootCx-C.NODE_W/2,k1R=e.length?Math.max(...e.map(q=>q[1])):rootCx+C.NODE_W/2;
+    for(const side of ['L','R']){
+      const list=cousinKids.filter(cn=>(side==='L')===(cn.x+cn.w/2<rootCx)).sort((a,b)=>side==='L'?b.x-a.x:a.x-b.x);
+      let cur=side==='L'?k1L-C.GAP:k1R+C.GAP;
+      for(const cn of list){
+        const w=cn.kidsArr.length*C.NODE_W+(cn.kidsArr.length-1)*C.GAP;
+        const desired=cn.x+cn.w/2;let cx;
+        if(side==='L'){const xr=Math.min(desired+w/2,cur);cx=xr-w/2;cur=xr-w-C.GAP}
+        else{const xl=Math.max(desired-w/2,cur);cx=xl+w/2;cur=xl+w+C.GAP}
+        const b=bot(cn);let kx=cx-w/2;
+        for(const k of cn.kidsArr){if(placed.has(k))continue;const n=addNode(k,kx+C.NODE_W/2,1,{cousinKid:true});dash(b[0],b[1],n.x+n.w/2,n.y);placed.add(k);kx+=C.NODE_W+C.GAP}
+      }
+    }
+  }
   // "ההורים של X" tags on the connector gap above each parent unit
   const tags=[];const nm=id=>M.byId.get(id).full_name;
   if(par.length){const f=parentNodes.get(par[0].pid),l=parentNodes.get(par[par.length-1].pid);tags.push({x:(f.x+l.x+l.w)/2,y:f.y+f.h+C.ROW_GAP*0.5,text:'ההורים של '+nm(rootId)})}
@@ -225,7 +246,8 @@ function layout(model,rootId,opts){
   const nephewsChip=hasNephews?{x:(Math.min(...sibWithKids.map(s=>s.x))+Math.max(...sibWithKids.map(s=>s.x+s.w)))/2,y:rowY(1)-36,w:104,h:30,open:nephewsOpen,kind:'nephews',label:'אחיינים',count:new Set(sibWithKids.flatMap(s=>s.kids)).size}:null;
   const uncleNodes=uncleKids.map(o=>parentNodes.get(o.u.id)).filter(Boolean);
   const cousinsChip=(unclesOpen&&hasCousins&&uncleNodes.length)?{x:(Math.min(...uncleNodes.map(n=>n.x))+Math.max(...uncleNodes.map(n=>n.x+n.w)))/2,y:rowY(0)-36,w:112,h:30,open:cousinsOpen,kind:'cousins',label:'בני דודים',count:new Set(uncleKids.flatMap(o=>o.u.kids)).size}:null;
-  const chips=[unclesChip,nephewsChip,cousinsChip].filter(Boolean);
+  const cousinKidsChip=(unclesOpen&&cousinsOpen&&hasCousinKids&&cousinKids.length)?{x:(Math.min(...cousinKids.map(n=>n.x))+Math.max(...cousinKids.map(n=>n.x+n.w)))/2,y:rowY(1)-36,w:150,h:30,open:cousinKidsOpen,kind:'cousinKids',label:'ילדי בני דודים',count:new Set(cousinKids.flatMap(n=>n.kidsArr)).size}:null;
+  const chips=[unclesChip,nephewsChip,cousinsChip,cousinKidsChip].filter(Boolean);
   // bounds
   let minX=Infinity,maxX=-Infinity,maxY=0;
   nodes.concat(groups.filter(g=>!g.hidden),chips.map(c=>({x:c.x-c.w/2,y:c.y,w:c.w,h:c.h}))).forEach(n=>{minX=Math.min(minX,n.x);maxX=Math.max(maxX,n.x+n.w);maxY=Math.max(maxY,n.y+n.h)});
@@ -292,6 +314,7 @@ function svg(model,L){
 const CSS=`.tv-uncles{box-sizing:border-box;position:absolute;z-index:2;direction:rtl;border:1px solid #C9A227;border-radius:15px;background:#fffdfa;color:#0C3B2E;font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0 8px}.tv-uncles:focus-visible{outline:2px solid #0C5A44;outline-offset:3px}
 .tv-tag{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;background:#F7F4EB;color:#6b7d73;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9px;z-index:1;direction:rtl}
 .tv-wrap{position:relative;direction:rtl;font-family:Arial,"Noto Sans Hebrew",sans-serif;color:#0C3B2E}
+.tv-scroll:focus-visible{outline:2px solid #0C5A44;outline-offset:2px}
 .tv-scroll{direction:rtl;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;background:#F7F4EB;border:1px solid #e1ddcf;border-radius:14px;padding:6px 0}
 .tv-canvas{position:relative;direction:ltr}.tv-canvas svg{position:absolute;left:0;top:0}
 .tv-line{fill:none;stroke:#C9A227;stroke-width:1.7;opacity:.95;stroke-linecap:round;stroke-linejoin:round}.tv-line.dashed{stroke-dasharray:4 4;opacity:.7}.tv-heart{fill:#C9A227;font-size:12px}
@@ -303,31 +326,30 @@ const CSS=`.tv-uncles{box-sizing:border-box;position:absolute;z-index:2;directio
 .tv-name{display:flex;flex-direction:column;min-width:0;width:100%;line-height:1.15;align-items:center}.tv-name b{font-size:11.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}.tv-name small{font-size:10px;color:#78867f;margin-top:2px}
 .tv-group{justify-content:center;gap:2px;background:#f1ecdc;border-style:dashed}.tv-group b{font-size:13px}.tv-group small{font-size:10px;color:#78867f}
 .tv-gen{display:flex;justify-content:center;margin:8px 0}.tv-gen button{min-height:38px;padding:0 18px;border:1px solid #085E45;background:#fffdfa;color:#085E45;border-radius:12px;font:inherit;font-weight:800;font-size:14px}.tv-gen button[hidden]{display:none}
-.tv-btns{display:flex;justify-content:space-between;gap:10px;margin:10px 0}.tv-btns button{flex:1;min-height:40px;border:1px solid #085E45;background:#fffdfa;color:#085E45;border-radius:12px;font:inherit;font-weight:800;font-size:14px}.tv-btns button:disabled{opacity:.35}
 .tv-wrap.tv-immersive .tv-scroll{overflow-y:auto;height:100dvh;border:0;border-radius:0;padding:0}
-.tv-wrap.tv-immersive .tv-gen,.tv-wrap.tv-immersive .tv-btns{display:none}
+.tv-wrap.tv-immersive .tv-gen{display:none}
 .tv-dock{position:fixed;right:calc(10px + env(safe-area-inset-right));bottom:calc(14px + env(safe-area-inset-bottom));z-index:40;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .tv-dock button{display:flex;align-items:center;gap:5px;background:rgba(255,253,250,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid #C7C1B2;color:#085E45;font:inherit;font-weight:700;font-size:12px;padding:8px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(8,94,69,.18);min-height:0;cursor:pointer}
 .tv-dock button[hidden]{display:none}.tv-dock button:disabled{opacity:.35}
-.tv-wrap.tv-immersive .tv-btns{display:none}
 .tv-wrap.tv-immersive .tv-scroll{scrollbar-width:none}
 .tv-wrap.tv-immersive .tv-scroll::-webkit-scrollbar{display:none}`;
 
 function mount(el,model,rootId,opts){
-  opts=opts||{};const expanded=new Set();let last;let unclesOpen=opts.unclesOpen===true;let nephewsOpen=opts.nephewsOpen===true;let cousinsOpen=opts.cousinsOpen===true;let immersiveMode=false,dock=null;const dockHomes=new Map();const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
+  opts=opts||{};const expanded=new Set();let last;let unclesOpen=opts.unclesOpen===true;let nephewsOpen=opts.nephewsOpen===true;let cousinsOpen=opts.cousinsOpen===true;let cousinKidsOpen=opts.cousinKidsOpen===true;let immersiveMode=false,dock=null;const dockHomes=new Map();const ex={up:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.up)|0)),down:Math.max(0,Math.min(8,+(opts.extra&&opts.extra.down)|0))};
   if(!document.getElementById('tv-css')){const s=document.createElement('style');s.id='tv-css';s.textContent=CSS;document.head.appendChild(s)}
-  el.innerHTML='<div class="tv-wrap"><div class="tv-gen"><button type="button" data-tv-gen="up">עוד דור ↑</button></div><div class="tv-scroll"></div><div class="tv-gen"><button type="button" data-tv-gen="down">עוד דור ↓</button></div><div class="tv-btns"><button type="button" data-tv-dir="back">חזרה</button><button type="button" data-tv-dir="more">המשך העץ</button></div></div>';
+  el.innerHTML='<div class="tv-wrap"><div class="tv-gen"><button type="button" data-tv-gen="up">עוד דור ↑</button></div><div class="tv-scroll"></div><div class="tv-gen"><button type="button" data-tv-gen="down">עוד דור ↓</button></div></div>';
   const sc=el.querySelector('.tv-scroll');
+  sc.tabIndex=0;sc.setAttribute('role','region');sc.setAttribute('aria-label','עץ');
+  sc.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){sc.scrollBy({left:-sc.clientWidth*0.7,behavior:'smooth'});e.preventDefault()}else if(e.key==='ArrowRight'){sc.scrollBy({left:sc.clientWidth*0.7,behavior:'smooth'});e.preventDefault()}});
   function paint(keepScroll){
-    const prev=sc.scrollLeft;last=layout(model,rootId,{expanded,extraUp:ex.up,extraDown:ex.down,unclesOpen,nephewsOpen,cousinsOpen});sc.innerHTML=html(model,last);
+    const prev=sc.scrollLeft;last=layout(model,rootId,{expanded,extraUp:ex.up,extraDown:ex.down,unclesOpen,nephewsOpen,cousinsOpen,cousinKidsOpen});sc.innerHTML=html(model,last);
     const canvas=sc.querySelector('.tv-canvas');canvas.style.marginRight=last.W<sc.clientWidth?(sc.clientWidth-last.W)/2+'px':'';
     sc.querySelectorAll('[data-tv-group]').forEach(b=>b.onclick=()=>{expanded.add(b.dataset.tvGroup);paint(true)});
-    sc.querySelectorAll('[data-tv-chip]').forEach(ch=>ch.onclick=()=>{const k=ch.dataset.tvChip;anchorChange(()=>{if(k==='uncles')unclesOpen=!unclesOpen;else if(k==='nephews')nephewsOpen=!nephewsOpen;else cousinsOpen=!cousinsOpen});if(k==='uncles'&&opts.onUncles)opts.onUncles(unclesOpen);if(k==='nephews'&&opts.onNephews)opts.onNephews(nephewsOpen);if(k==='cousins'&&opts.onCousins)opts.onCousins(cousinsOpen)});
+    sc.querySelectorAll('[data-tv-chip]').forEach(ch=>ch.onclick=()=>{const k=ch.dataset.tvChip;anchorChange(()=>{if(k==='uncles')unclesOpen=!unclesOpen;else if(k==='nephews')nephewsOpen=!nephewsOpen;else if(k==='cousins')cousinsOpen=!cousinsOpen;else cousinKidsOpen=!cousinKidsOpen});if(k==='uncles'&&opts.onUncles)opts.onUncles(unclesOpen);if(k==='nephews'&&opts.onNephews)opts.onNephews(nephewsOpen);if(k==='cousins'&&opts.onCousins)opts.onCousins(cousinsOpen);if(k==='cousinKids'&&opts.onCousinKids)opts.onCousinKids(cousinKidsOpen)});
     sc.querySelectorAll('[data-tv-person]').forEach(b=>b.onclick=()=>opts.onPerson&&opts.onPerson(b.dataset.tvPerson));
     if(keepScroll)sc.scrollLeft=prev;else{const r=sc.querySelector('.root');if(r){const max=sc.scrollWidth-sc.clientWidth,c=r.offsetLeft+r.offsetWidth/2;sc.scrollLeft=Math.min(0,Math.max(-max,Math.min(max,Math.max(0,c-sc.clientWidth/2))-max))}else sc.scrollLeft=-(sc.scrollWidth-sc.clientWidth)/2}
     if(immersiveMode&&!keepScroll){const r=sc.querySelector('.root');if(r)sc.scrollTop=Math.max(0,r.offsetTop+r.offsetHeight/2-sc.clientHeight/2)}
     el.querySelector('[data-tv-gen=up]').hidden=!last.moreUp;el.querySelector('[data-tv-gen=down]').hidden=!last.moreDown;
-    upd();
   }
   function anchorChange(change){
     const r0=sc.querySelector('.root'),b0=r0&&r0.getBoundingClientRect();
@@ -337,18 +359,13 @@ function mount(el,model,rootId,opts){
       // residual horizontal compensation: when the canvas is narrower than the scroller, the
       // centering margin changes and scrollLeft has no range - nudge the margin instead.
       try{const cv=sc.querySelector('.tv-canvas');for(let i=0;i<3;i++){const b2=r1.getBoundingClientRect();const dx=Math.round(b2.left-b0.left);if(!dx)break;const mr=parseFloat(cv.style.marginRight)||0;cv.style.marginRight=Math.max(0,mr+dx)+'px'}}catch(e){}}
-    upd();
   }
   function grow(dir){
     anchorChange(()=>{if(dir==='up')ex.up++;else ex.down++});
     if(opts.onExtra)try{opts.onExtra({up:ex.up,down:ex.down})}catch(e){}
   }
   el.querySelectorAll('[data-tv-gen]').forEach(b=>b.onclick=()=>grow(b.dataset.tvGen));
-  const upd=()=>{const max=sc.scrollWidth-sc.clientWidth,pos=Math.abs(sc.scrollLeft);el.querySelector('[data-tv-dir=more]').disabled=max<=2||pos>=max-2;el.querySelector('[data-tv-dir=back]').disabled=max<=2||pos<=2};
-  sc.addEventListener('scroll',upd);
-  el.querySelector('[data-tv-dir=more]').onclick=()=>sc.scrollBy({left:-sc.clientWidth*0.7,behavior:'smooth'});
-  el.querySelector('[data-tv-dir=back]').onclick=()=>sc.scrollBy({left:sc.clientWidth*0.7,behavior:'smooth'});
-  const genUp=el.querySelector('[data-tv-gen=up]'),genDn=el.querySelector('[data-tv-gen=down]'),dirMore=el.querySelector('[data-tv-dir=more]'),dirBack=el.querySelector('[data-tv-dir=back]');
+  const genUp=el.querySelector('[data-tv-gen=up]'),genDn=el.querySelector('[data-tv-gen=down]');
   function setImmersive(on){
     on=!!on;if(on===immersiveMode&&dock===null&&!on)return;immersiveMode=on;
     el.querySelector('.tv-wrap').classList.toggle('tv-immersive',on);
@@ -364,7 +381,7 @@ function mount(el,model,rootId,opts){
     }
     paint(false);
   }
-  paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex,get unclesOpen(){return unclesOpen},get nephewsOpen(){return nephewsOpen},get cousinsOpen(){return cousinsOpen},setImmersive,get immersive(){return immersiveMode}};
+  paint(false);return{get layout(){return last},repaint:paint,expanded,extra:ex,get unclesOpen(){return unclesOpen},get nephewsOpen(){return nephewsOpen},get cousinsOpen(){return cousinsOpen},get cousinKidsOpen(){return cousinKidsOpen},setImmersive,get immersive(){return immersiveMode}};
 }
 
 const api={C,makeModel,layout,html,mount,svg};

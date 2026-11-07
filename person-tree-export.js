@@ -35,7 +35,7 @@ async function build(data){
   const rootPerson=model.byId.get(data.rootId);
   if(!rootPerson)throw new Error('person missing');
   const o=data.options||{};
-  const L=T.layout(model,data.rootId,{extraUp:o.extraUp|0,extraDown:o.extraDown|0,unclesOpen:o.unclesOpen===true,nephewsOpen:o.nephewsOpen===true,cousinsOpen:o.cousinsOpen===true,expanded:new Set(o.expanded||[])});
+  const L=T.layout(model,data.rootId,{extraUp:o.extraUp|0,extraDown:o.extraDown|0,unclesOpen:o.unclesOpen===true,nephewsOpen:o.nephewsOpen===true,cousinsOpen:o.cousinsOpen===true,cousinKidsOpen:o.cousinKidsOpen===true,expanded:new Set(o.expanded||[])});
   const c=compose(model,L,rootPerson.full_name);
   let r=Math.min(MAX_R,Math.sqrt(MAX_AREA/(c.W*c.H))),img=null,lastErr=null;
   for(let attempt=0;attempt<3&&!img;attempt++){try{img=await rasterize(c.svg,c.W,c.H,r)}catch(e){lastErr=e;r=r*0.7}}
