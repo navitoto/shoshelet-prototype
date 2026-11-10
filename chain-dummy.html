@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מדור לדור - דמו משפחת כהן</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#F7F4EB; font-family:Arial,"Noto Sans Hebrew",sans-serif; color:#0C3B2E; }
+  body { max-width:430px; margin:0 auto; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; }
+  .screen { display:none; flex-direction:column; flex:1; }
+  .screen.on { display:flex; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 14px 4px; }
+  .back { font-size:13px; color:#085E45; background:none; border:none; font-family:inherit; cursor:pointer; }
+  .title { font-size:18px; font-weight:bold; color:#085E45; }
+  .dummy-note { background:#E9E1CE; color:#0C3B2E; font-size:11.5px; text-align:center; padding:5px 10px; border-radius:8px; margin:6px 14px 0; }
+  .status { display:flex; justify-content:center; gap:16px; padding:2px 0 0; font-size:12.5px; color:#0C3B2E; border-bottom:1px solid #E9E1CE; margin:0 14px; padding-bottom:6px; }
+  .status b { color:#085E45; }
+  .clock { font-weight:bold; font-size:14px; }
+  .clock.low { color:#b3261e; }
+  .tree-wrap { position:relative; }
+  .leaf { cursor:pointer; }
+  .leaf.locked { cursor:default; }
+  .bank { margin:0 12px; background:#fff; border:1px solid #E9E1CE; border-radius:12px; padding:8px; }
+  .bank-label { font-size:11.5px; color:#6b7f76; margin-bottom:6px; text-align:center; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; min-height:30px; }
+  .chip { background:#F7F4EB; border:1px solid #085E45; color:#0C3B2E; border-radius:999px; padding:5px 11px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .chip.sel { background:#085E45; color:#fff; }
+  .actions { display:flex; gap:8px; margin:10px 12px 14px; }
+  .btn { border-radius:10px; padding:12px 0; text-align:center; font-size:13.5px; font-weight:bold; border:none; cursor:pointer; font-family:inherit; }
+  .actions .btn { flex:1; }
+  .btn-hint { background:#fff; border:1px solid #C9A227; color:#8a6d12; }
+  .actions .btn-hint { flex:0.7; }
+  .btn-hint:disabled { opacity:.45; cursor:default; }
+  .btn-approve { background:#085E45; color:#fff; }
+  .btn-approve:disabled { background:#9DBFB4; cursor:default; }
+  .primary { background:#085E45; color:#fff; }
+  .secondary { background:#fff; border:1px solid #085E45; color:#085E45; }
+  .center-box { flex-direction:column; align-items:center; justify-content:center; padding:24px 20px; text-align:center; gap:14px; }
+  .screen.center-box.on { display:flex; flex:1; }
+  .center-box h1 { color:#085E45; font-size:24px; }
+  .center-box p { font-size:14.5px; line-height:1.6; max-width:320px; }
+  .endbox { background:#085E45; color:#fff; border-radius:14px; padding:18px 16px; margin:10px 14px; text-align:center; }
+  .endbox .big { font-size:26px; font-weight:bold; display:block; margin-bottom:2px; }
+  .endbox .sub { font-size:12.5px; opacity:.9; }
+  .rank { background:#fff; border:1px solid #E9E1CE; border-radius:12px; margin:10px 14px; padding:10px 14px; font-size:13px; }
+  .rank h3 { color:#085E45; font-size:13.5px; margin-bottom:6px; }
+  .rank .row { display:flex; justify-content:space-between; padding:3px 0; border-top:1px dashed #E9E1CE; }
+  .rank .row:first-of-type { border-top:none; }
+  .flash { animation:fl .4s; }
+  @keyframes fl { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 100%{transform:scale(1)} }
+  .shake { animation:sh .35s; }
+  @keyframes sh { 0%,100%{transform:translateX(0)} 25%{transform:translateX(4px)} 75%{transform:translateX(-4px)} }
+</style>
+</head>
+<body>
+
+<!-- intro -->
+<div class="screen center-box on" id="scrIntro">
+  <h1>מדור לדור</h1>
+  <p>שני אנשים מהמשפחה נמצאים בשני קצוות העץ. ביניהם חסרות ארבע חוליות - מצאו את שרשרת הקשרים המלאה: כל שני סמוכים חייבים להיות קרובים ישירים (הורה-ילד, אחים או בני זוג).</p>
+  <p>יש לכם עד 3 ניסיונות ועד 2 רמזים. שרשרת תקינה כלשהי מנצחת, גם אם היא לא זו שחשבנו עליה.</p>
+  <button class="btn primary" style="max-width:220px" id="btnStart">מתחילים</button>
+  <div class="dummy-note">עמוד ניסיון בלבד - משפחת כהן (דמו). לא מחובר לאתר שושלת.</div>
+</div>
+
+<!-- board -->
+<div class="screen" id="scrBoard">
+  <div class="topbar"><button class="back" id="btnExit">‹ יציאה</button><span class="title">מדור לדור</span><span style="width:36px"></span></div>
+  <div class="status"><span class="clock" id="uiClock">3:00</span><span>ניסיונות: <b id="uiTries">3</b></span><span>רמזים: <b id="uiHints">2</b></span></div>
+  <div class="tree-wrap">
+  <svg id="boardSvg" width="100%" viewBox="0 0 390 500" style="display:block">
+    <g transform="translate(0,18)">
+    <g opacity="0.45">
+      <ellipse cx="195" cy="470" rx="150" ry="22" fill="#BFE0B0" stroke="#2F7D5B" stroke-width="3"/>
+      <ellipse cx="95" cy="472" rx="34" ry="14" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/>
+      <ellipse cx="300" cy="474" rx="30" ry="13" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/>
+      <path d="M178 468 C182 420 176 380 168 345 C165 330 168 318 176 308 L184 320 C182 340 186 350 196 356 C206 350 210 338 208 318 L216 306 C225 318 227 332 222 348 C212 384 206 424 212 468 Z" fill="#B07B4F" stroke="#7A5330" stroke-width="3.5" stroke-linejoin="round"/>
+      <path d="M186 460 C188 430 185 400 180 372" fill="none" stroke="#7A5330" stroke-width="2" opacity="0.5"/>
+      <path d="M202 458 C200 432 204 404 210 380" fill="none" stroke="#7A5330" stroke-width="2" opacity="0.5"/>
+      <g stroke="#085E45" stroke-width="3.5" stroke-linejoin="round">
+        <circle cx="195" cy="170" r="95" fill="#5FA878"/>
+        <circle cx="120" cy="210" r="62" fill="#7DBE8A"/>
+        <circle cx="272" cy="208" r="60" fill="#7DBE8A"/>
+        <circle cx="150" cy="130" r="58" fill="#A8D5A2"/>
+        <circle cx="245" cy="125" r="56" fill="#8CCB97"/>
+        <circle cx="195" cy="100" r="48" fill="#BFE0B0"/>
+        <circle cx="105" cy="275" r="40" fill="#5FA878"/>
+        <circle cx="290" cy="272" r="42" fill="#5FA878"/>
+        <circle cx="160" cy="285" r="44" fill="#7DBE8A"/>
+        <circle cx="235" cy="288" r="42" fill="#8CCB97"/>
+      </g>
+      <g fill="none" stroke="#085E45" stroke-width="2" opacity="0.35">
+        <path d="M150 95 q10 -12 22 -4 q12 -10 22 2"/><path d="M230 90 q10 -12 22 -4 q12 -10 22 2"/>
+        <path d="M95 195 q10 -12 22 -4 q12 -10 22 2"/><path d="M255 190 q10 -12 22 -4 q12 -10 22 2"/>
+        <path d="M130 265 q10 -12 22 -4 q12 -10 22 2"/><path d="M230 270 q10 -12 22 -4 q12 -10 22 2"/>
+      </g>
+      <g stroke="#8a6d12" stroke-width="1.6" fill="#C9A227">
+        <circle cx="150" cy="160" r="5"/><circle cx="330" cy="245" r="5"/><circle cx="115" cy="330" r="5"/>
+      </g>
+      <circle cx="150" cy="160" r="1.8" fill="#F7F4EB"/><circle cx="330" cy="245" r="1.8" fill="#F7F4EB"/><circle cx="115" cy="330" r="1.8" fill="#F7F4EB"/>
+    </g>
+    <path id="vine" d="M311 175 A118 118 0 1 0 195 313" fill="none" stroke="#085E45" stroke-width="3" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.8"/>
+    <g id="hintTags" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g>
+    <g id="leaves" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g>
+    </g>
+  </svg>
+  </div>
+  <div class="bank">
+    <div class="bank-label">בנק השמות - הקישו כדי לשבץ בעץ</div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-hint" id="btnHint">רמז</button>
+    <button class="btn btn-approve" id="btnApprove" disabled>אישור</button>
+  </div>
+</div>
+
+<!-- end -->
+<div class="screen" id="scrEnd">
+  <div class="topbar"><span style="width:36px"></span><span class="title">מדור לדור</span><span style="width:36px"></span></div>
+  <div class="endbox"><span class="big" id="endScore">0</span><span class="sub">נקודות היום</span><p class="sub" id="endMsg" style="margin-top:8px"></p></div>
+  <div class="rank" id="endTables"></div>
+  <div class="actions"><button class="btn secondary" id="btnReset">משחק חדש (איפוס דמו)</button></div>
+  <div class="dummy-note">עמוד ניסיון בלבד - הטבלאות מקומיות למכשיר הזה. בחיבור לאתר: טבלאות היום/השבוע/השנה האמיתיות.</div>
+</div>
+
+<script>
+"use strict";
+/* ===== משפחת כהן - נתוני דמו ===== */
+const PEOPLE = {
+  abraham:{name:'אברהם כהן', gender:'m'},
+  miriam: {name:'מרים כהן',  gender:'f'},
+  yaakov: {name:'יעקב כהן',  gender:'m'},
+  moshe:  {name:'משה כהן',   gender:'m'},
+  rachel: {name:'רחל כהן',   gender:'f'},
+  sara:   {name:'שרה כהן',   gender:'f'},
+  dina:   {name:'דינה כהן',  gender:'f'},
+  haim:   {name:'חיים פרץ',  gender:'m'},
+  lea:    {name:'לאה גולן',  gender:'f'},
+  david:  {name:'דוד לוי',   gender:'m'},
+};
+/* קשרים ישירים: הורה-ילד, אחים, בני זוג (דו-כיווני) */
+const EDGES = [
+  ['abraham','miriam','בני זוג'],
+  ['abraham','yaakov','הורה-ילד'],
+  ['miriam','yaakov','הורה-ילד'],
+  ['abraham','moshe','הורה-ילד'],
+  ['miriam','moshe','הורה-ילד'],
+  ['yaakov','rachel','בני זוג'],
+  ['yaakov','sara','הורה-ילד'],
+  ['rachel','sara','הורה-ילד'],
+  ['moshe','dina','הורה-ילד'],
+  ['yaakov','moshe','אחים'],
+];
+const ADJ = {};
+EDGES.forEach(([a,b])=>{ (ADJ[a]=ADJ[a]||new Set()).add(b); (ADJ[b]=ADJ[b]||new Set()).add(a); });
+const related = (a,b)=> !!(ADJ[a] && ADJ[a].has(b));
+
+/* הלוח הקבוע של היום (דמו): שרה ← → דינה */
+const START='sara', END='dina';
+const BANK = ['yaakov','abraham','miriam','moshe','rachel','haim','lea','david']; // 4 נכונים + 4 מסיחים
+/* תוויות קשר לרמזים, לפי הפתרון המיועד */
+const SOLUTION = ['yaakov','abraham','miriam','moshe'];
+const HINT_LABELS = ['אבא של','אבא של','אישת של','בן של','בת של']; // בין שרה→יעקב→אברהם→מרים→משה→דינה
+
+/* מיקומי העלים (כמו במוקאפ המאושר) */
+const POS = {
+  start:{x:311,y:175}, s0:{x:250,y:91}, s1:{x:147,y:87}, s2:{x:80,y:166}, s3:{x:102,y:268}, end:{x:195,y:313},
+};
+const ARC_MID = [ /* נקודות אמצע על הקשת בין כל זוג סמוך, לתגיות רמז */
+  {x:296,y:126},{x:205,y:64},{x:100,y:105},{x:62,y:222},{x:150,y:306},
+];
+
+/* כל השרשרות התקינות האפשריות מהבנק (לנעילת נכונות ולניצחון) */
+function allValidChains(){
+  const res=[];
+  function dfs(path, used){
+    if(path.length===5){ // ארבע החוליות מלאות - נשאר להתחבר לקצה הסוף
+      if(related(path[4], END)) res.push([...path, END]);
+      return;
+    }
+    for(const p of BANK){
+      if(used.has(p)) continue;
+      if(!related(path[path.length-1], p)) continue;
+      used.add(p); dfs([...path,p], used); used.delete(p);
+    }
+  }
+  dfs([START], new Set([START]));
+  return res;
+}
+const VALID = allValidChains();
+
+/* ===== מצב ===== */
+const LS='shoshelet-chain-dummy-v1';
+let S; // {slots:[id|null x4], locked:[bool x4], triesLeft, hintsLeft, hintsShown, deadline, phase, score}
+function freshState(){
+  return {slots:[null,null,null,null], locked:[false,false,false,false],
+          triesLeft:3, hintsLeft:2, hintsShown:0, deadline:null, phase:'intro', score:null, won:false};
+}
+function save(){ localStorage.setItem(LS, JSON.stringify(S)); }
+function load(){ try{ const s=JSON.parse(localStorage.getItem(LS)); return s&&typeof s==='object'?s:null; }catch(e){ return null; } }
+
+const $=id=>document.getElementById(id);
+const svgNS='http://www.w3.org/2000/svg';
+let timer=null, selected=null;
+
+function show(id){ document.querySelectorAll('.screen').forEach(e=>e.classList.remove('on')); $(id).classList.add('on'); }
+
+/* ===== רינדור הלוח ===== */
+function el(tag, attrs, parent){ const e=document.createElementNS(svgNS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); if(parent) parent.appendChild(e); return e; }
+function txt(parent, x, y, size, fill, str, bold){ const t=el('text',{x,y,'font-size':size,fill},parent); if(bold) t.setAttribute('font-weight','bold'); t.textContent=str; return t; }
+
+function drawLeaves(){
+  const g=$('leaves'); g.innerHTML='';
+  // קצה התחלה (מלא ירוק)
+  let w=el('g',{class:'leaf'},g);
+  el('ellipse',{cx:POS.start.x,cy:POS.start.y,rx:38,ry:28,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);
+  txt(w,POS.start.x,POS.start.y+5,13,'#fff',PEOPLE[START].name,true);
+  el('path',{d:'M273 203 L349 203 L343 213 L349 223 L273 223 L279 213 Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);
+  txt(w,POS.start.x,217,10,'#fff','התחלה',true);
+  // קצה סוף
+  w=el('g',{class:'leaf'},g);
+  el('ellipse',{cx:POS.end.x,cy:POS.end.y,rx:38,ry:28,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);
+  txt(w,POS.end.x,POS.end.y+5,13,'#fff',PEOPLE[END].name,true);
+  el('path',{d:'M157 341 L233 341 L227 351 L233 361 L157 361 L163 351 Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);
+  txt(w,POS.end.x,355,10,'#fff','סוף',true);
+  // 4 חריצים
+  for(let i=0;i<4;i++){
+    const p=POS['s'+i], id=S.slots[i], locked=S.locked[i];
+    w=el('g',{class:'leaf'+(locked?' locked':''),'data-slot':i},g);
+    if(id){
+      el('ellipse',{cx:p.x,cy:p.y,rx:38,ry:28,fill:'#fff',stroke:'#085E45','stroke-width':3},w);
+      txt(w,p.x,p.y+5,13,'#0C3B2E',PEOPLE[id].name,false);
+      if(locked){ el('circle',{cx:p.x+33,cy:p.y-21,r:9,fill:'#085E45'},w); txt(w,p.x+33,p.y-16.5,11,'#fff','✓',true); }
+    } else {
+      el('ellipse',{cx:p.x,cy:p.y,rx:38,ry:28,fill:'#F7F4EB',stroke:'#085E45','stroke-width':2.5,'stroke-dasharray':'6 5'},w);
+      txt(w,p.x,p.y+7,19,'#085E45','?',false);
+    }
+    w.addEventListener('click',()=>onSlot(i,w));
+  }
+}
+
+function drawHints(){
+  const g=$('hintTags'); g.innerHTML='';
+  for(let i=0;i<S.hintsShown;i++){
+    const m=ARC_MID[i];
+    const w=el('g',{},g);
+    el('rect',{x:m.x-29,y:m.y-11,width:58,height:22,rx:11,fill:'#085E45'},w);
+    txt(w,m.x,m.y+4,11,'#fff',HINT_LABELS[i],true);
+  }
+}
+
+function drawBank(){
+  const c=$('chips'); c.innerHTML='';
+  const placed=new Set(S.slots.filter(Boolean));
+  BANK.forEach(id=>{
+    if(placed.has(id)) return;
+    const b=document.createElement('button');
+    b.className='chip'+(selected===id?' sel':'');
+    b.textContent=PEOPLE[id].name;
+    b.onclick=()=>onChip(id,b);
+    c.appendChild(b);
+  });
+  if(!c.children.length){ const s=document.createElement('span'); s.style.cssText='font-size:12px;color:#6b7f76'; s.textContent='כל השמות על העץ'; c.appendChild(s); }
+}
+
+function drawStatus(){
+  $('uiTries').textContent=S.triesLeft;
+  $('uiHints').textContent=S.hintsLeft;
+  $('btnHint').disabled = S.hintsLeft<=0 || S.phase!=='play';
+  $('btnApprove').disabled = !(S.phase==='play' && S.slots.every(x=>x));
+}
+
+function render(){ drawLeaves(); drawHints(); drawBank(); drawStatus(); }
+
+/* ===== אינטראקציה ===== */
+function onChip(id){
+  if(S.phase!=='play') return;
+  selected = (selected===id)? null : id;
+  if(selected){ // מילוי אוטומטי למשבצת הפנויה הראשונה
+    const i=S.slots.findIndex(x=>!x);
+    if(i>=0){ S.slots[i]=selected; selected=null; save(); render(); flashSlot(i); }
+    else render();
+  } else render();
+}
+function onSlot(i,w){
+  if(S.phase!=='play' || S.locked[i]) return;
+  if(selected && !S.slots[i]){ S.slots[i]=selected; selected=null; save(); render(); flashSlot(i); return; }
+  if(S.slots[i]){ S.slots[i]=null; save(); render(); } // החזרה למאגר
+  else if(selected){ S.slots[i]=selected; selected=null; save(); render(); flashSlot(i); }
+}
+function flashSlot(i){ const w=document.querySelector(`#leaves [data-slot="${i}"]`); if(w){ w.classList.add('flash'); setTimeout(()=>w.classList.remove('flash'),450); } }
+
+$('btnHint').onclick=()=>{
+  if(S.phase!=='play'||S.hintsLeft<=0) return;
+  S.hintsLeft--; S.hintsShown=Math.min(5,S.hintsShown+1); save(); render();
+};
+
+$('btnApprove').onclick=()=>{
+  if(S.phase!=='play'||!S.slots.every(x=>x)) return;
+  const placed=[START,...S.slots,END];
+  let ok=true; for(let i=0;i<5;i++) if(!related(placed[i],placed[i+1])){ ok=false; break; }
+  if(ok){ win(); return; }
+  // כישלון: נועלים נכונות, מחזירים שגויות
+  S.triesLeft--;
+  for(let i=0;i<4;i++){
+    if(S.locked[i]) continue;
+    const id=S.slots[i];
+    const correctHere = VALID.some(ch=>ch[i+1]===id);
+    if(correctHere) S.locked[i]=true; else S.slots[i]=null;
+  }
+  selected=null;
+  if(S.triesLeft<=0){ S.score=0; S.won=false; S.phase='done'; save(); showEnd(); return; }
+  save(); render();
+  const b=$('scrBoard'); b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),400);
+};
+
+function calcScore(){ const attemptsUsed=3-S.triesLeft+1, hintsUsed=2-S.hintsLeft; return Math.max(1, 6-attemptsUsed-hintsUsed); }
+
+function win(){
+  S.won=true; S.score=calcScore(); S.phase='done'; save();
+  recordResult(S.score);
+  showEnd();
+}
+function timeoutLose(){ S.won=false; S.score=0; S.phase='done'; save(); recordResult(0); showEnd(); }
+
+/* ===== שעון: 3 דקות, ממשיך גם ביציאה ===== */
+function tick(){
+  const left=Math.max(0, S.deadline-Date.now());
+  const m=Math.floor(left/60000), s=Math.floor(left%60000/1000);
+  const c=$('uiClock'); c.textContent=m+':'+String(s).padStart(2,'0');
+  c.classList.toggle('low', left<=30000);
+  if(left<=0 && S.phase==='play'){ clearInterval(timer); timeoutLose(); }
+}
+$('btnStart').onclick=()=>{
+  if(S.phase!=='play'){ S=freshState(); S.phase='play'; S.deadline=Date.now()+180000; save(); }
+  show('scrBoard'); render(); clearInterval(timer); tick(); timer=setInterval(tick,500);
+};
+$('btnExit').onclick=()=>{ save(); show('scrIntro'); clearInterval(timer); };
+
+/* ===== מסך סיום + טבלאות דמו ===== */
+function recordResult(sc){
+  const hist=JSON.parse(localStorage.getItem(LS+'-hist')||'[]');
+  hist.push({ts:Date.now(), score:sc});
+  localStorage.setItem(LS+'-hist', JSON.stringify(hist));
+}
+function showEnd(){
+  clearInterval(timer);
+  show('scrEnd');
+  $('endScore').textContent=S.score;
+  $('endMsg').textContent = S.won ? 'כל הכבוד! מצאתם שרשרת תקינה.' : 'הפעם לא הסתדר - מחר לוח חדש.';
+  const hist=JSON.parse(localStorage.getItem(LS+'-hist')||'[]');
+  const now=new Date();
+  const dayK=d=>d.toDateString();
+  const weekStart=new Date(now); weekStart.setDate(now.getDate()-now.getDay()); weekStart.setHours(0,0,0,0);
+  const sum=f=>hist.filter(f).reduce((a,h)=>a+h.score,0);
+  const rows=[
+    ['היום', sum(h=>dayK(new Date(h.ts))===dayK(now))],
+    ['השבוע', sum(h=>h.ts>=weekStart.getTime())],
+    ['השנה', sum(h=>new Date(h.ts).getFullYear()===now.getFullYear())],
+  ];
+  $('endTables').innerHTML='<h3>הניקוד שלך (דמו)</h3>'+rows.map(([k,v])=>`<div class="row"><span>${k}</span><b>${v}</b></div>`).join('');
+}
+$('btnReset').onclick=()=>{ S=freshState(); save(); show('scrIntro'); };
+
+/* ===== אתחול ===== */
+S = load() || freshState();
+if(S.phase==='done'){ showEnd(); }
+else if(S.phase==='play'){
+  if(Date.now()>=S.deadline){ timeoutLose(); }
+  else { show('scrBoard'); render(); tick(); timer=setInterval(tick,500); }
+}
+
+/* מצבי צילום לבדיקה בלבד: #demo-mid / #demo-end */
+if(location.hash==='#demo-mid'){
+  S=freshState(); S.phase='play'; S.deadline=Date.now()+151000;
+  S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hintsShown=1; S.hintsLeft=1;
+  show('scrBoard'); render(); tick(); timer=setInterval(tick,500);
+}
+if(location.hash==='#demo-win'){
+  S=freshState(); S.phase='play'; S.deadline=Date.now()+120000;
+  S.slots=['yaakov','abraham','miriam','moshe'];
+  show('scrBoard'); render(); tick();
+  $('btnApprove').click();
+}
+if(location.hash==='#demo-end'){
+  S=freshState(); S.phase='done'; S.won=true; S.score=5; recordResult(5); showEnd();
+}
+</script>
+</body>
+</html>
