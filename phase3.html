@@ -173,7 +173,31 @@ body.immersive-landscape #bottomApp{display:none}
 <button id="exitImmersive" class="exitfab" type="button" aria-label="יציאה מתצוגת הרוחב" hidden>✕</button>
 </main>
 <div id="exportSheet" class="photo-sheet" role="dialog" aria-modal="true" aria-labelledby="exportSheetTitle" hidden><div class="photo-panel"><div class="install-handle"></div><h2 id="exportSheetTitle">ייצוא ל-PDF</h2><div id="exportOptions" role="radiogroup" aria-labelledby="exportSheetTitle"></div><button id="exportSheetGo" class="btn primary" type="button"></button><button id="exportSheetCancel" class="photo-cancel" type="button">ביטול</button></div></div><input id="photoFile" type="file" accept="image/*,.heic,.heif" hidden><div id="photoSheet" class="photo-sheet" role="dialog" aria-modal="true" aria-labelledby="photoSheetTitle" hidden><div class="photo-panel"><div class="install-handle"></div><h2 id="photoSheetTitle"></h2><p id="requiredPhotoHint" class="muted" hidden>אפשר להחליף את התמונה בתמונה אחרת.</p><button id="photoOptGoogle" class="photo-opt" type="button"><span class="ic">G</span><span><b>להשתמש בתמונה מגוגל</b><small>העתקה חד פעמית. לא מתעדכנת אם התמונה תשתנה בגוגל</small></span></button><button id="photoOptUpload" class="photo-opt" type="button"><span class="ic">⬆</span><span><b>להעלות מהמכשיר</b><small>גלריה או מצלמה</small></span></button><button id="photoOptIcon" class="photo-opt" type="button"><span class="ic"><span id="photoOptIconEmoji" class="emoji">🙂</span></span><span><b>לשנות אייקון</b><small>האייקון מופיע בכרטיס שלך</small></span></button><button id="photoOptReplace" class="photo-opt" type="button"><span class="ic">↻</span><span><b>להחליף תמונה</b><small>בוחרים מקור חדש</small></span></button><button id="photoOptRemove" class="photo-opt danger" type="button"><span class="ic">✕</span><span><b>הסרת התמונה</b><small id="photoOptRemoveHint">חוזרים לאות</small></span></button><button id="photoCancel" class="photo-cancel" type="button">ביטול</button></div></div><div id="photoPreview" class="photo-full" role="dialog" aria-modal="true" aria-labelledby="photoPreviewTitle" hidden><div><h2 id="photoPreviewTitle">כך התמונה תופיע</h2><p class="sub">מזיזים ומקרבים בתוך העיגול</p><div class="photo-stage"><canvas id="photoCanvas" width="420" height="420"></canvas></div><div class="photo-note">התמונה גלויה לכל בני המשפחה בכרטיס שלך בלבד. היא לא מופיעה בעץ, בחיפוש, בייצוא PDF או בטריוויה.</div><button id="photoSave" class="btn" type="button">שמירה</button><button id="photoRetry" class="btn secondary" type="button">בחירה מחדש</button></div></div><div id="photoConfirm" class="photo-dialog" role="alertdialog" aria-modal="true" aria-labelledby="photoConfirmTitle" hidden><div><h2 id="photoConfirmTitle">להסיר את התמונה?</h2><p>התמונה נמחקת מהכרטיס ומהאחסון שלנו. תמונת הגוגל בחשבון ההתחברות שלך לא תימחק.</p><button id="photoConfirmYes" class="btn red" type="button">הסרה</button><button id="photoConfirmNo" class="btn secondary" type="button">ביטול</button></div></div>
-<div id="iconSheet" class="photo-sheet" role="dialog" aria-modal="true" aria-labelledby="iconSheetTitle" hidden><div class="photo-panel"><div class="install-handle"></div><h2 id="iconSheetTitle">לשנות אייקון</h2><p class="icon-sheet-note" id="iconSheetNote">האייקון מופיע בכרטיס שלך</p><div id="iconGrid" class="icon-grid"></div><button id="iconCancel" class="photo-cancel" type="button">ביטול</button></div></div><script src="./tree-view.js" defer></script><script type="module">import{createClient}from'./supabase-2.117.3.esm.js';
+<div id="iconSheet" class="photo-sheet" role="dialog" aria-modal="true" aria-labelledby="iconSheetTitle" hidden><div class="photo-panel"><div class="install-handle"></div><h2 id="iconSheetTitle">לשנות אייקון</h2><p class="icon-sheet-note" id="iconSheetNote">האייקון מופיע בכרטיס שלך</p><div id="iconGrid" class="icon-grid"></div><button id="iconCancel" class="photo-cancel" type="button">ביטול</button></div></div><script src="./tree-view.js" defer></script><style>
+.chn-status{display:flex;justify-content:center;gap:16px;font-size:12.5px;color:var(--ink);border-bottom:1px solid var(--sand);margin:0 4px;padding:0 0 6px}
+.chn-status b{color:var(--green)}
+.chn-clock{font-weight:bold;font-size:23px;letter-spacing:1px}
+.chn-clock.low{color:#b3261e}
+.chn-svg{display:block;width:100%}
+.chn-bank{margin:0 4px;background:var(--white);border:1px solid var(--sand);border-radius:12px;padding:8px}
+.chn-bank-label{font-size:11.5px;color:var(--muted);margin-bottom:6px;text-align:center}
+.chn-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:30px}
+.chn-chip{background:var(--cream);border:1px solid var(--green);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.chn-chip.sel{background:var(--green);color:#fff}
+.chn-actions{display:flex;gap:8px;margin:10px 4px 6px}
+.chn-actions .btn{flex:1;margin:0}
+.chn-btn-hint{flex:0.7!important;background:var(--white);border:1px solid var(--gold);color:#8a6d12}
+.chn-btn-hint:disabled{opacity:.45;cursor:default}
+.chn-flash{animation:chnfl .4s}
+@keyframes chnfl{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+.chn-shake{animation:chnsh .35s}
+@keyframes chnsh{0%,100%{transform:translateX(0)}25%{transform:translateX(4px)}75%{transform:translateX(-4px)}}
+.chn-solrow{display:flex;justify-content:space-between;align-items:center;background:var(--white);border:1px solid var(--sand);border-radius:12px;padding:9px 12px;margin-top:8px;font-size:13px}
+.chn-solrow .chn-sollab{background:var(--green);color:#fff;border-radius:999px;padding:2px 10px;font-size:11.5px;font-weight:700}
+.bottomApp button b{height:24px;line-height:24px}
+.bottomApp button b svg{display:inline-block;vertical-align:middle;width:20px;height:20px}
+</style>
+<script type="module">import{createClient}from'./supabase-2.117.3.esm.js';
 /* Clear only the retired temporary measurement preference. */
 try{localStorage.removeItem('shoshelet_startup_timing')}catch{}
 var trvFillTok=0;const sb=createClient('https://kwtvgzevfvfjlfdpvzem.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3dHZnemV2ZnZmamxmZHB2emVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk3ODI5MzcsImV4cCI6MjEwNTM1ODkzN30.vevkNEH6JTKTF0K02f9Dw8RymGXZpaksvBN6kg4V5yU',{auth:{persistSession:true,detectSessionInUrl:false,flowType:'pkce'}}),$=s=>document.querySelector(s),screens=[...document.querySelectorAll('.screen')];let memorialEntryEnabled=false;function renderMemorialEntry(){let el=$('#showMemorialEntry');el.checked=memorialEntryEnabled;el.setAttribute('aria-checked',String(memorialEntryEnabled));$('#relativeMemorial').hidden=!memorialEntryEnabled;if(!memorialEntryEnabled){$('#relativeMemorial').open=false;$('#relativeDeathDate').value='';decMarked.relative=false;renderDecRow('relative')}}$('#showMemorialEntry').onchange=async e=>{let checkbox=e.target,next=checkbox.checked;checkbox.disabled=true;let{data,error}=await sb.auth.updateUser({data:{show_memorial_entry:next}});checkbox.disabled=false;if(error){toast('ההגדרה לא נשמרה. נסו שוב.');return renderMemorialEntry()}memorialEntryEnabled=data.user.user_metadata?.show_memorial_entry===true;renderMemorialEntry()};let me=null,ownerMe=null,relationTarget=null,editTarget=null,addOriginId=null,familyId=null,people=[],parents=[],unions=[],siblingDeclarations=[],verifiedPeople=new Set(),historyEvents=[];
@@ -989,7 +1013,7 @@ const PRS={name:'מקושרים',gamesTitle:'משחקים',
  medalName:'שבוע מושלם במקושרים' /* DRAFT */,medalDesc:'4 מתוך 4 בכל יום, 7 ימים ברצף' /* DRAFT */,
  period:{daily:'היום',weekly:'השבוע',annual:'השנה'}};
 let prsTimer=null,prsBusy=false,prsSel=[],prsEpoch=0,prsCache=null,prsCacheTimer=null;
-function prsStop(){clearInterval(prsTimer);prsTimer=null;clearInterval(prsCacheTimer);prsCacheTimer=null;prsEpoch++}
+function prsStop(){clearInterval(prsTimer);prsTimer=null;clearInterval(prsCacheTimer);prsCacheTimer=null;prsEpoch++;clearInterval(chnTimer);chnTimer=null}
 async function prsRpc(fn,args){let{data,error}=await sb.rpc(fn,{p_family_id:familyId,...args});if(error)throw error;return data}
 function prsHead(t,left=''){return `<div class="trv-head"><b>${esc(t)}</b><span>${left}</span></div>`}
 function prsBack(title,go){return `<div class="trv-sub"><button type="button" class="trv-back" id="prsBack" aria-label="${esc(PRS.toGames)}">‹</button><b>${esc(title)}</b></div>`}
@@ -1003,8 +1027,9 @@ const PRS_IC={medal:`<svg viewBox="0 0 24 24" width="26" height="26" fill="none"
 function gamesHub(){prsFromHub=false;prsStop();trvStop();let e=trvEl();if(!e)return;trvViewEpoch++;
  e.innerHTML=prsHead(PRS.gamesTitle)+` <button type="button" class="prs-game" id="gmTrivia"><img class="prs-gimg" src="assets/game-trivia.png" alt="" width="64" height="64"><b>${esc(TRV_TEXT.title)}</b><span class="prs-go">‹ לשחק</span></button>
  <button type="button" class="prs-game" id="gmPairs"><img class="prs-gimg" src="assets/game-pairs.png" alt="" width="64" height="64"><b>${PRS.name}</b><span class="prs-go">${PRS.play}</span></button>
+ <button type="button" class="prs-game" id="gmChain"><img class="prs-gimg" src="assets/game-chain.png" alt="" width="64" height="64"><b>מדור לדור</b><span class="prs-go">‹ לשחק</span></button>
  <button type="button" class="trv-fillcta" id="gmMissing"><b>${esc(TRV_FILL.ctaTitle)}</b><span class="trv-fillcta-sub">${esc(TRV_FILL.btnSub)}</span><span class="trv-fillcta-go">${esc(TRV_FILL.ctaGo)}</span></button><div class="prs-icons"><button type="button" class="prs-ico" id="gmMedals" aria-label="${PRS.medals}"><span class="prs-ic">${PRS_IC.medal}</span><span class="prs-icl" aria-hidden="true">מדליות</span></button><button type="button" class="prs-ico" id="gmScores" aria-label="${PRS.scores}"><span class="prs-ic">${PRS_IC.podium}</span><span class="prs-icl" aria-hidden="true">ניקוד</span></button></div>`;
- e.querySelector('#gmTrivia').onclick=()=>{prsFromHub=false;triviaOpen()};e.querySelector('#gmPairs').onclick=prsOpen;
+ e.querySelector('#gmTrivia').onclick=()=>{prsFromHub=false;triviaOpen()};e.querySelector('#gmPairs').onclick=prsOpen;e.querySelector('#gmChain').onclick=chnOpen;
  e.querySelector('#gmMissing').onclick=()=>{prsFromHub=true;trvFillView({phase:'hub'})};
  e.querySelector('#gmScores').onclick=()=>gamesScores('pairs');e.querySelector('#gmMedals').onclick=gamesMedals}
 async function prsOpen(){prsStop();trvStop();let e=trvEl(),ep=prsEpoch;prsCacheShow(e);
@@ -1036,9 +1061,10 @@ function prsDone(s){prsStop();let e=trvEl(),reason=s.reason==='complete'?PRS.okR
   let per=[];if(t.week!==null)per.push(`<span class="trv-pot-rec">${esc(PRS.period.weekly)}: ${t.week} נקודות</span>`);if(t.year!==null)per.push(`<span class="trv-pot-tot">${esc(PRS.period.annual)}: ${t.year} נקודות</span>`);
   box.innerHTML=`<div class="trv-pot trv-donebox"><span class="trv-pot-big">${esc(t.is_today?TRV_FAM.today(t.score):`${t.score} נקודות`)}</span>${per.join('<span class="trv-pot-sep"></span>')}${trvBar(trvPct(t.streak,t.target),PRS.medalName)}<span class="trv-pot-next">${esc(`${t.streak} מתוך ${t.target} ימים ברצף`)}</span></div>`}).catch(()=>{});prsCacheObserve(e,s,[placeJob,totalsJob])}
 async function gamesScores(tab){prsStop();trvStop();trvViewEpoch++;let e=trvEl();if(!e)return;
- e.innerHTML=prsBack(PRS.scores)+`<div class="trv-ranktabs" role="group" aria-label="משחק"><button type="button" data-g="trivia" aria-pressed="${tab==='trivia'}">${esc(TRV_TEXT.title)}</button><button type="button" data-g="pairs" aria-pressed="${tab==='pairs'}">${PRS.name}</button></div><section id="trvRankings" class="trv-ranks"></section>`;
+ e.innerHTML=prsBack(PRS.scores)+`<div class="trv-ranktabs" role="group" aria-label="משחק"><button type="button" data-g="trivia" aria-pressed="${tab==='trivia'}">${esc(TRV_TEXT.title)}</button><button type="button" data-g="pairs" aria-pressed="${tab==='pairs'}">${PRS.name}</button><button type="button" data-g="chain" aria-pressed="${tab==='chain'}">מדור לדור</button></div><section id="trvRankings" class="trv-ranks"></section>`;
  e.querySelector('#prsBack').onclick=gamesHub;e.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>gamesScores(b.dataset.g));
  if(tab==='trivia')return trvRankings(e);
+ if(tab==='chain')return chnRankings(e);
  let host=e.querySelector('#trvRankings'),ep=trvViewEpoch;host.innerHTML='<p class="muted" role="status">טוענים את לוחות הניקוד...</p>';
  try{let r=await prsRpc('pairs_rankings',{});if(ep!==trvViewEpoch||!document.body.contains(host))return;let sel='daily';
   let draw=()=>{let rows=r[sel]||[],per=sel==='daily'?trvRankDate(r.day):sel==='weekly'?`מ־${trvRankDate(r.week_start)} עד ${trvRankDate(r.week_end)}`:String(r.year);
@@ -1062,4 +1088,103 @@ async function gamesMedals(t0){prsStop();trvStop();trvViewEpoch++;let e=trvEl();
   let hp=ok?trvMineHtml(r).replace(/<p class="muted center">.*?<\/p>$/,'').replace(/<\/div>$/,pb+'</div>'):`<h3 class="trv-h">${esc(TRV_FAM.mine)}</h3><div class="trv-mine">${pb}</div>`;
   let tab=t0==='family'?'family':'personal',draw=()=>{e.innerHTML=prsBack(PRS.medals)+`<div class="trv-ranktabs" role="group" aria-label="${esc(PRS.medals)}"><button type="button" data-t="personal" aria-pressed="${tab==='personal'}">אישי</button><button type="button" data-t="family" aria-pressed="${tab==='family'}">משפחתי</button></div>`+(tab==='personal'?hp:ok?h:`<p class="center muted" role="status">${esc(PRS.err)}</p><button type="button" class="btn secondary trv-full" id="prsMedRetry">${esc(PRS.retry)}</button>`);e.querySelector('#prsBack').onclick=gamesHub;let rt=e.querySelector('#prsMedRetry');if(rt)rt.onclick=()=>gamesMedals('family');e.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()})};draw()}catch(x){e.innerHTML=prsBack(PRS.medals)+`<p class="center muted" role="status">${esc(PRS.err)}</p>`;e.querySelector('#prsBack').onclick=gamesHub}}
 
+
+/* ===== מדור לדור - daily chain game (spec 114-118). Server-authoritative like מקושרים. ===== */
+const CHN={name:'מדור לדור',play:'‹ לשחק',
+ readyTitle:'מדור לדור',
+ steps:['שני אנשים מהמשפחה נמצאים בשני קצוות העץ. ביניהם חסרות ארבע חוליות - מצאו את שרשרת הקשרים המלאה.','כל שני סמוכים בשרשרת חייבים להיות קרובים ישירים: הורה-ילד, אחים או בני זוג.','יש עד 3 ניסיונות ועד 2 רמזים. שרשרת תקינה כלשהי מנצחת, גם אם היא לא זו שחשבנו עליה.','הניקוד: 5 נקודות פחות נקודה על כל ניסיון ורמז'],
+ readyNote:'הלוח והזמן נפתחים רק אחרי הלחיצה.',start:'מתחילים',
+ empty:'אין היום לוח מדור לדור למשפחה הזו.',preparing:'הלוח של היום עדיין לא מוכן. אפשר לחזור לכאן מאוחר יותר.',unavail:'הלוח של היום לא זמין כרגע.',
+ err:'לא הצלחנו לטעון. נסו שוב.',retry:'נסו שוב',toGames:'חזרה למשחקים',
+ bankLabel:'בנק השמות - הקישו כדי לשבץ בעץ',bankEmpty:'כל השמות על העץ',
+ hint:'רמז',approve:'אישור',exit:'‹ יציאה',startTag:'התחלה',endTag:'סוף',
+ triesL:'ניסיונות:',hintsL:'רמזים:',
+ winMsg:'כל הכבוד! מצאתם שרשרת תקינה.',loseMsg:'הפעם לא הסתדר - מחר לוח חדש.',timeMsg:'נגמר הזמן. מחר לוח חדש.',
+ solTitle:'הפתרון של היום',tomorrow:'נתראה מחר עם לוח חדש'};
+let chnTimer=null;
+const CHN_POS={start:{x:311,y:175},s0:{x:250,y:91},s1:{x:147,y:87},s2:{x:80,y:166},s3:{x:102,y:268},end:{x:195,y:313}};
+const CHN_ARC=[{x:322,y:102},{x:205,y:34},{x:76,y:80},{x:54,y:210},{x:110,y:320}];
+async function chnRpc(fn,args){let{data,error}=await sb.rpc(fn,{p_family_id:familyId,...args});if(error)throw error;return data}
+function chnSlotsKey(day){return `chn-slots-${familyId}-${day}`}
+function chnErrView(e,fn){e.innerHTML=prsHead(CHN.name)+`<p class="center muted" role="status">${esc(CHN.err)}</p><button type="button" class="btn secondary trv-full" id="chnRetry">${esc(CHN.retry)}</button><button type="button" class="link" id="chnHome">${esc(CHN.toGames)}</button>`;e.querySelector('#chnRetry').onclick=fn;e.querySelector('#chnHome').onclick=gamesHub}
+async function chnOpen(){prsStop();trvStop();let e=trvEl(),ep=prsEpoch;e.innerHTML=prsHead(CHN.name)+'<p class="center muted" role="status">…</p>';
+ try{let s=await chnRpc('chain_state',{});if(ep!==prsEpoch)return;chnRender(s)}catch(x){if(ep===prsEpoch)chnErrView(e,chnOpen)}}
+function chnRender(s){prsStop();let e=trvEl();if(!e)return;
+ if(s.phase==='ready')return chnReady(s);if(s.phase==='playing')return chnBoard(s);if(s.phase==='done')return chnDone(s);
+ let t=s.phase==='preparing'?CHN.preparing:s.phase==='unavailable'?CHN.unavail:CHN.empty;
+ e.innerHTML=prsHead(CHN.name)+`<p class="center" role="status">${esc(t)}</p><button type="button" class="btn trv-full" id="chnHome">${esc(CHN.toGames)}</button>`;e.querySelector('#chnHome').onclick=gamesHub}
+function chnReady(s){let e=trvEl();e.innerHTML=prsHead(CHN.name)+`<h2 class="center">${esc(CHN.readyTitle)}</h2><ol class="prs-steps">${CHN.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol><p class="center muted">${esc(CHN.readyNote)}</p><button type="button" class="btn trv-full" id="chnStart">${esc(CHN.start)}</button><button type="button" class="link" id="chnHome">${esc(CHN.toGames)}</button>`;
+ e.querySelector('#chnHome').onclick=gamesHub;let b=e.querySelector('#chnStart');b.onclick=async()=>{b.disabled=true;try{chnRender(await chnRpc('chain_start',{}))}catch(x){b.disabled=false;toast(CHN.err)}}}
+function chnBoard(s){prsStop();let e=trvEl(),ep=prsEpoch,end=Date.now()+s.remaining_ms,sel=null,busy=false;
+ let names={};names[s.start.id]=s.start.name;names[s.end.id]=s.end.name;(s.bank||[]).forEach(b=>names[b.id]=b.name);
+ let locked=(s.locked||[]).map(x=>x||null);
+ let slots=[null,null,null,null];
+ try{let saved=JSON.parse(localStorage.getItem(chnSlotsKey(s.day))||'null');if(Array.isArray(saved)&&saved.length===4)saved.forEach((id,i)=>{if(id&&(s.bank||[]).some(b=>b.id===id))slots[i]=id})}catch(x){}
+ locked.forEach((id,i)=>{if(id)slots[i]=id}); // the server is authoritative for locked placements
+ let hints=s.hints||[],triesLeft=s.tries_left,hintsLeft=s.hints_left;
+ const svgNS='http://www.w3.org/2000/svg';
+ function eln(tag,attrs,parent){let n=document.createElementNS(svgNS,tag);for(let k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n}
+ function stxt(parent,x,y,size,fill,str,bold){let t=eln('text',{x,y,'font-size':size,fill},parent);if(bold)t.setAttribute('font-weight','bold');t.textContent=str;return t}
+ e.innerHTML=prsHead(CHN.name,`<button type="button" class="prs-hl" id="chnExit">${esc(CHN.exit)}</button>`)
+  +`<div class="chn-status"><span class="chn-clock" id="chnClock">3:00</span><span>${esc(CHN.triesL)} <b id="chnTries">${triesLeft}</b></span><span>${esc(CHN.hintsL)} <b id="chnHints">${hintsLeft}</b></span></div>`
+  +`<div id="chnWrap"><svg class="chn-svg" viewBox="0 0 390 500"><g transform="translate(0,18)"><g opacity="0.45"><ellipse cx="195" cy="470" rx="150" ry="22" fill="#BFE0B0" stroke="#2F7D5B" stroke-width="3"/><ellipse cx="95" cy="472" rx="34" ry="14" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/><ellipse cx="300" cy="474" rx="30" ry="13" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/><path d="M178 468 C182 420 176 380 168 345 C165 330 168 318 176 308 L184 320 C182 340 186 350 196 356 C206 350 210 338 208 318 L216 306 C225 318 227 332 222 348 C212 384 206 424 212 468 Z" fill="#B07B4F" stroke="#7A5330" stroke-width="3.5" stroke-linejoin="round"/><g stroke="#085E45" stroke-width="3.5" stroke-linejoin="round"><circle cx="195" cy="170" r="95" fill="#5FA878"/><circle cx="120" cy="210" r="62" fill="#7DBE8A"/><circle cx="272" cy="208" r="60" fill="#7DBE8A"/><circle cx="150" cy="130" r="58" fill="#A8D5A2"/><circle cx="245" cy="125" r="56" fill="#8CCB97"/><circle cx="195" cy="100" r="48" fill="#BFE0B0"/><circle cx="105" cy="275" r="40" fill="#5FA878"/><circle cx="290" cy="272" r="42" fill="#5FA878"/><circle cx="160" cy="285" r="44" fill="#7DBE8A"/><circle cx="235" cy="288" r="42" fill="#8CCB97"/></g></g><path d="M311 175 A118 118 0 1 0 195 313" fill="none" stroke="#085E45" stroke-width="3" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.8"/><g id="chnHintTags" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g><g id="chnLeaves" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g></g></svg></div>`
+  +`<div class="chn-bank"><div class="chn-bank-label">${esc(CHN.bankLabel)}</div><div class="chn-chips" id="chnChips"></div></div>`
+  +`<div class="chn-actions"><button type="button" class="btn secondary chn-btn-hint" id="chnHintBtn">${esc(CHN.hint)}</button><button type="button" class="btn primary" id="chnOk" disabled>${esc(CHN.approve)}</button></div>`;
+ function drawLeaves(){let g=e.querySelector('#chnLeaves');g.innerHTML='';
+  let w=eln('g',{},g);eln('ellipse',{cx:CHN_POS.start.x,cy:CHN_POS.start.y,rx:38,ry:28,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);stxt(w,CHN_POS.start.x,CHN_POS.start.y+5,13,'#fff',names[s.start.id],true);eln('path',{d:'M273 203 L349 203 L343 213 L349 223 L273 223 L279 213 Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);stxt(w,CHN_POS.start.x,217,10,'#fff',CHN.startTag,true);
+  w=eln('g',{},g);eln('ellipse',{cx:CHN_POS.end.x,cy:CHN_POS.end.y,rx:38,ry:28,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);stxt(w,CHN_POS.end.x,CHN_POS.end.y+5,13,'#fff',names[s.end.id],true);eln('path',{d:'M157 341 L233 341 L227 351 L233 361 L157 361 L163 351 Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);stxt(w,CHN_POS.end.x,355,10,'#fff',CHN.endTag,true);
+  for(let i=0;i<4;i++){let p=CHN_POS['s'+i],id=slots[i],lk=!!locked[i];
+   w=eln('g',{class:'chn-leaf','data-slot':i},g);
+   if(id){eln('ellipse',{cx:p.x,cy:p.y,rx:38,ry:28,fill:'#fff',stroke:'#085E45','stroke-width':3},w);stxt(w,p.x,p.y+5,13,'#0C3B2E',names[id],false);
+    if(lk){eln('circle',{cx:p.x+33,cy:p.y-21,r:9,fill:'#085E45'},w);stxt(w,p.x+33,p.y-16.5,11,'#fff','✓',true)}}
+   else{eln('ellipse',{cx:p.x,cy:p.y,rx:38,ry:28,fill:'#F7F4EB',stroke:'#085E45','stroke-width':2.5,'stroke-dasharray':'6 5'},w);stxt(w,p.x,p.y+7,19,'#085E45','?',false)}
+   w.addEventListener('click',()=>onSlot(i,w))}}
+ function drawHints(){let g=e.querySelector('#chnHintTags');g.innerHTML='';
+  for(let h of hints){let m=CHN_ARC[h.seg];let w=eln('g',{},g);let tw=Math.max(58,h.label.length*7+18);eln('rect',{x:m.x-tw/2,y:m.y-11,width:tw,height:22,rx:11,fill:'#085E45'},w);stxt(w,m.x,m.y+4,11,'#fff',h.label,true)}}
+ function drawBank(){let c=e.querySelector('#chnChips');c.innerHTML='';let placed=new Set(slots.filter(Boolean));
+  (s.bank||[]).forEach(b=>{if(placed.has(b.id))return;let btn=document.createElement('button');btn.type='button';btn.className='chn-chip'+(sel===b.id?' sel':'');btn.textContent=b.name;btn.onclick=()=>onChip(b.id);c.appendChild(btn)});
+  if(!c.children.length){let sp=document.createElement('span');sp.style.cssText='font-size:12px;color:#6b7f76';sp.textContent=CHN.bankEmpty;c.appendChild(sp)}}
+ function updBtns(){e.querySelector('#chnTries').textContent=triesLeft;e.querySelector('#chnHints').textContent=hintsLeft;e.querySelector('#chnHintBtn').disabled=hintsLeft<=0||busy;e.querySelector('#chnOk').disabled=busy||!slots.every(x=>x)}
+ function render(){drawLeaves();drawHints();drawBank();updBtns()}
+ function persist(){try{localStorage.setItem(chnSlotsKey(s.day),JSON.stringify(slots.map((id,i)=>locked[i]?null:id)))}catch(x){}}
+ function flashSlot(i){let w=e.querySelector(`#chnLeaves [data-slot="${i}"]`);if(w){w.classList.add('chn-flash');setTimeout(()=>w.classList.remove('chn-flash'),450)}}
+ function onChip(id){if(busy)return;sel=sel===id?null:id;
+  if(sel){let i=slots.findIndex((x,k)=>!x&&!locked[k]);if(i>=0){slots[i]=sel;sel=null;persist();render();flashSlot(i)}else render()}else render()}
+ function onSlot(i,w){if(busy||locked[i])return;
+  if(slots[i]){slots[i]=null;persist();render();return}
+  if(sel){slots[i]=sel;sel=null;persist();render();flashSlot(i)}}
+ function applyState(r,clearUnlocked){if(ep!==prsEpoch)return false;
+  if(r.phase!=='playing'){chnRender(r);return false}
+  locked=(r.locked||[]).map(x=>x||null);locked.forEach((id,i)=>{if(id)slots[i]=id});
+  if(clearUnlocked)slots=slots.map((id,i)=>locked[i]?id:null); // a failed submission returns wrong names to the bank
+  else slots=slots.map((id,i)=>locked[i]?id:(id&&(r.bank||[]).some(b=>b.id===id)?id:null));
+  hints=r.hints||[];triesLeft=r.tries_left;hintsLeft=r.hints_left;persist();render();return true}
+ e.querySelector('#chnHintBtn').onclick=async()=>{if(busy||hintsLeft<=0)return;busy=true;updBtns();
+  try{let r=await chnRpc('chain_hint',{});busy=false;applyState(r)}catch(x){busy=false;render();toast(CHN.err)}};
+ e.querySelector('#chnOk').onclick=async()=>{if(busy||!slots.every(x=>x))return;busy=true;updBtns();
+  try{let r=await chnRpc('chain_check',{p_slots:slots});
+   if(ep!==prsEpoch)return;
+   if(r.last_result==='won'||r.last_result==='lost'||r.phase==='done'){try{localStorage.removeItem(chnSlotsKey(s.day))}catch(x){}chnRender(r);return}
+   busy=false;applyState(r,true);
+   let w=e.querySelector('#chnWrap');if(w){w.classList.add('chn-shake');setTimeout(()=>w.classList.remove('chn-shake'),400)}}
+  catch(x){busy=false;render();toast(CHN.err)}};
+ e.querySelector('#chnExit').onclick=()=>{persist();gamesHub()};
+ let clock=e.querySelector('#chnClock');
+ function tick(){let r=Math.max(0,end-Date.now());let sc=Math.ceil(r/1000);clock.textContent=`${Math.floor(sc/60)}:${String(sc%60).padStart(2,'0')}`;clock.classList.toggle('low',r<=30000);if(r<=0&&ep===prsEpoch){clearInterval(chnTimer);chnFinish()}}
+ async function chnFinish(){try{chnRender(await chnRpc('chain_state',{}))}catch(x){setTimeout(()=>ep===prsEpoch&&chnFinish(),1500)}}
+ tick();chnTimer=setInterval(tick,500);render()}
+function chnDone(s){prsStop();let e=trvEl(),msg=s.reason==='timeout'?CHN.timeMsg:s.won?CHN.winMsg:CHN.loseMsg;
+ let sol='';if(Array.isArray(s.solution)&&s.solution.length===6){let lb=s.solution_labels||[];sol=`<h3 class="prs-solh">${esc(CHN.solTitle)}</h3>`+lb.map((l,i)=>`<div class="chn-solrow"><span>${esc(s.solution[i].name)} ו${esc(s.solution[i+1].name)}</span><span class="chn-sollab">${esc(l)}</span></div>`).join('')}
+ e.innerHTML=prsHead(CHN.name,`<button type="button" class="prs-hl" id="chnHome0">‹ ${esc(PRS.gamesTitle)}</button>`)+`<div class="prs-endbox"><b class="prs-big">${s.score||0}</b><div class="prs-endl">נקודות היום</div><p>${esc(msg)}</p></div><div id="chnSum"></div><button type="button" class="trv-place" id="endPlaceCard" hidden></button>${sol}<button type="button" class="btn trv-full" id="chnHome">${esc(CHN.toGames)}</button><span id="endScoreSlot" style="display:contents"></span><p class="center muted">${esc(CHN.tomorrow)}</p>`;
+ e.querySelector('#chnHome').onclick=e.querySelector('#chnHome0').onclick=gamesHub;let placeJob=(()=>{let ep1=prsEpoch,cd=e.querySelector('#endPlaceCard');return endPlace(e,chnRpc,'chain_rankings','chain',()=>ep1===prsEpoch&&document.body.contains(cd))})();
+ let ep=prsEpoch;let totalsJob=chnRpc('chain_totals',{p_day:s.day}).then(t=>{let box=e.querySelector('#chnSum');if(ep!==prsEpoch||!box)return;let nn=v=>v===null||Number.isInteger(v)&&v>=0;
+  if(!t||t.day!==s.day||typeof t.is_today!=='boolean'||!nn(t.week)||!nn(t.year))return;
+  let per=[];if(t.week!==null)per.push(`<span class="trv-pot-rec">${esc(PRS.period.weekly)}: ${t.week} נקודות</span>`);if(t.year!==null)per.push(`<span class="trv-pot-tot">${esc(PRS.period.annual)}: ${t.year} נקודות</span>`);
+  box.innerHTML=`<div class="trv-pot trv-donebox"><span class="trv-pot-big">${t.score||0} נקודות</span>${per.join('<span class="trv-pot-sep"></span>')}</div>`}).catch(()=>{})}
+async function chnRankings(e){let host=e.querySelector('#trvRankings'),ep=trvViewEpoch;host.innerHTML='<p class="muted" role="status">טוענים את לוחות הניקוד...</p>';
+ try{let r=await chnRpc('chain_rankings',{});if(ep!==trvViewEpoch||!document.body.contains(host))return;let sel='daily';
+  let draw=()=>{let rows=r[sel]||[],per=sel==='daily'?trvRankDate(r.day):sel==='weekly'?`מ־${trvRankDate(r.week_start)} עד ${trvRankDate(r.week_end)}`:String(r.year);
+   host.innerHTML=`<div class="trv-ranktabs" role="group" aria-label="תקופת לוח הניקוד">`+['daily','weekly','annual'].map(k=>`<button type="button" data-period="${k}" aria-pressed="${k===sel}">${PRS.period[k]}</button>`).join('')+`</div><p class="trv-rankperiod">${esc(per)}</p>`+(rows.length?trvRankTable(rows):'<p class="center muted" role="status">עדיין אין תוצאות לתקופה הזו.</p>')+`<p class="trv-ranknote">${sel==='daily'?'כל מי ששיחק מופיע, גם עם 0.':'סכום נקודות מדור לדור. מוצגים בעלי נקודות בלבד.'}</p>`;
+   host.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{sel=b.dataset.period;draw()})};draw()}
+ catch(x){host.innerHTML=`<p class="muted" role="status">${esc(CHN.err)}</p>`}}
 </script></body></html>
