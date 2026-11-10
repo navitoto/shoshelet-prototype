@@ -16,7 +16,7 @@
   .dummy-note { background:#E9E1CE; color:#0C3B2E; font-size:11.5px; text-align:center; padding:5px 10px; border-radius:8px; margin:6px 14px 0; }
   .status { display:flex; justify-content:center; gap:16px; padding:2px 0 0; font-size:12.5px; color:#0C3B2E; border-bottom:1px solid #E9E1CE; margin:0 14px; padding-bottom:6px; }
   .status b { color:#085E45; }
-  .clock { font-weight:bold; font-size:14px; }
+  .clock { font-weight:bold; font-size:23px; letter-spacing:1px; } /* גודל כמו השעון במשחק מקושרים */
   .clock.low { color:#b3261e; }
   .tree-wrap { position:relative; }
   .leaf { cursor:pointer; }
@@ -148,7 +148,7 @@ const EDGES = [
   ['abraham','moshe','הורה-ילד'],
   ['miriam','moshe','הורה-ילד'],
   ['yaakov','rachel','בני זוג'],
-  ['yaakov','sara','הורה-ילד'],
+  ['yaakov','sara','אחים'],
   ['rachel','sara','הורה-ילד'],
   ['moshe','dina','הורה-ילד'],
   ['yaakov','moshe','אחים'],
@@ -164,13 +164,9 @@ const BANK = ['yaakov','abraham','miriam','moshe','rachel','haim','lea','david']
 const RELTYPE = {};
 EDGES.forEach(([a,b,t])=>{ RELTYPE[a+'|'+b]=t; RELTYPE[b+'|'+a]=t; });
 function relationLabel(a,b){
+  // תיוג זוגי פשוט, בלי כיוון: אחים / בני זוג / הורה וילד
   const t=RELTYPE[a+'|'+b];
-  if(t==='בני זוג') return 'בני זוג';
-  if(t==='אחים') return 'אחים';
-  // הורה-ילד: סוג הזוג בלבד, בלי לגלות מי ההורה ומי הילד (אב ובתו / אם ובנה...)
-  const e=EDGES.find(([p,c])=>RELTYPE[p+'|'+c]==='הורה-ילד'&&((p===a&&c===b)||(p===b&&c===a)));
-  const pm=PEOPLE[e[0]].gender==='m', cm=PEOPLE[e[1]].gender==='m';
-  return (pm?'אב':'אם')+' ו'+(cm?(pm?'בנו':'בנה'):(pm?'בתו':'בתה'));
+  return t==='הורה-ילד'?'הורה וילד':t;
 }
 const SOLUTION = ['yaakov','abraham','miriam','moshe'];
 
@@ -401,7 +397,7 @@ else if(S.phase==='play'){
 /* מצבי צילום לבדיקה בלבד: #demo-mid / #demo-end */
 if(location.hash==='#demo-mid'){
   S=freshState(); S.phase='play'; S.deadline=Date.now()+151000;
-  S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hints=[{seg:1,label:'אב ובנו'}]; S.hintsLeft=1;
+  S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hints=[{seg:1,label:'הורה וילד'}]; S.hintsLeft=1;
   show('scrBoard'); render(); tick(); timer=setInterval(tick,500);
 }
 if(location.hash==='#demo-win'){
