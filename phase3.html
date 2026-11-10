@@ -1148,8 +1148,7 @@ function chnBoard(s){prsStop();let e=trvEl(),ep=prsEpoch,end=Date.now()+s.remain
  function render(){drawLeaves();drawHints();drawBank();updBtns()}
  function persist(){try{localStorage.setItem(chnSlotsKey(s.day),JSON.stringify(slots.map((id,i)=>locked[i]?null:id)))}catch(x){}}
  function flashSlot(i){let w=e.querySelector(`#chnLeaves [data-slot="${i}"]`);if(w){w.classList.add('chn-flash');setTimeout(()=>w.classList.remove('chn-flash'),450)}}
- function onChip(id){if(busy)return;sel=sel===id?null:id;
-  if(sel){let i=slots.findIndex((x,k)=>!x&&!locked[k]);if(i>=0){slots[i]=sel;sel=null;persist();render();flashSlot(i)}else render()}else render()}
+ function onChip(id){if(busy)return;sel=sel===id?null:id;render()}
  function onSlot(i,w){if(busy||locked[i])return;
   if(slots[i]){slots[i]=null;persist();render();return}
   if(sel){slots[i]=sel;sel=null;persist();render();flashSlot(i)}}
