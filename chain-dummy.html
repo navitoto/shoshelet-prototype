@@ -267,6 +267,13 @@ function drawHints(){
   for(const h of S.hints){
     const m=ARC_MID[h.seg];
     const w=el('g',{},g);
+    // חץ קטן מהתגית אל העלה שהקשר מתייחס אליו (החוליה הבאה בשרשרת)
+    const tp = h.seg+1===5 ? POS.end : POS['s'+h.seg];
+    const dx=tp.x-m.x, dy=tp.y-m.y, len=Math.hypot(dx,dy)||1, ux=dx/len, uy=dy/len;
+    const tEdge=Math.min(29/(Math.abs(ux)||1e-6), 11/(Math.abs(uy)||1e-6));
+    const cx=m.x+ux*tEdge, cy=m.y+uy*tEdge;       // בסיס החץ על שפת התגית
+    const ax=m.x+ux*(tEdge+14), ay=m.y+uy*(tEdge+14); // קודקוד החץ לקראת העלה
+    el('path',{d:`M${ax.toFixed(1)} ${ay.toFixed(1)} L${(cx-uy*8).toFixed(1)} ${(cy+ux*8).toFixed(1)} L${(cx+uy*8).toFixed(1)} ${(cy-ux*8).toFixed(1)} Z`,fill:'#085E45'},w);
     el('rect',{x:m.x-29,y:m.y-11,width:58,height:22,rx:11,fill:'#085E45'},w);
     txt(w,m.x,m.y+4,11,'#fff',h.label,true);
   }
