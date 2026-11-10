@@ -60,6 +60,7 @@
   <h1>מדור לדור</h1>
   <p>שני אנשים מהמשפחה נמצאים בשני קצוות העץ. ביניהם חסרות ארבע חוליות - מצאו את שרשרת הקשרים המלאה: כל שני סמוכים חייבים להיות קרובים ישירים (הורה-ילד, אחים או בני זוג).</p>
   <p>יש לכם עד 3 ניסיונות ועד 2 רמזים. שרשרת תקינה כלשהי מנצחת, גם אם היא לא זו שחשבנו עליה.</p>
+  <p>הניקוד: מתחילים מ-6 ויורדת נקודה על כל ניסיון ועל כל רמז, ותמיד מקבלים לפחות נקודה אחת. ניצחון בניסיון הראשון בלי רמזים נותן 5 נקודות.</p>
   <button class="btn primary" style="max-width:220px" id="btnStart">מתחילים</button>
   <div class="dummy-note">עמוד ניסיון בלבד - משפחת כהן (דמו). לא מחובר לאתר שושלת.</div>
 </div>
@@ -175,7 +176,7 @@ const POS = {
   start:{x:311,y:175}, s0:{x:250,y:91}, s1:{x:147,y:87}, s2:{x:80,y:166}, s3:{x:102,y:268}, end:{x:195,y:313},
 };
 const ARC_MID = [ /* נקודות אמצע על הקשת בין כל זוג סמוך, לתגיות רמז */
-  {x:296,y:126},{x:205,y:64},{x:100,y:105},{x:62,y:222},{x:150,y:306},
+  {x:322,y:102},{x:205,y:34},{x:76,y:80},{x:54,y:210},{x:110,y:320},
 ];
 
 /* כל השרשרות התקינות האפשריות מהבנק (לנעילת נכונות ולניצחון) */
@@ -395,6 +396,11 @@ else if(S.phase==='play'){
 }
 
 /* מצבי צילום לבדיקה בלבד: #demo-mid / #demo-end */
+if(location.hash==='#demo-hints'){
+  S=freshState(); S.phase='play'; S.deadline=Date.now()+151000; S.hintsLeft=0;
+  S.hints=[0,1,2,3,4].map(seg=>({seg, label:relationLabel(VALID[0][seg],VALID[0][seg+1])}));
+  show('scrBoard'); render(); tick(); timer=setInterval(tick,500);
+}
 if(location.hash==='#demo-mid'){
   S=freshState(); S.phase='play'; S.deadline=Date.now()+151000;
   S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hints=[{seg:1,label:'הורה וילד'}]; S.hintsLeft=1;
