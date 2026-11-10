@@ -164,14 +164,13 @@ const BANK = ['yaakov','abraham','miriam','moshe','rachel','haim','lea','david']
 const RELTYPE = {};
 EDGES.forEach(([a,b,t])=>{ RELTYPE[a+'|'+b]=t; RELTYPE[b+'|'+a]=t; });
 function relationLabel(a,b){
-  const t=RELTYPE[a+'|'+b], g=PEOPLE[b].gender;
-  const he=g==='m'?'הוא ':'היא '; // b הוא האדם החסר; הכיוון במילים
-  if(t==='בני זוג') return he+(g==='m'?'הבעל של':'אישת של');
-  if(t==='אחים') return he+(g==='m'?'האח של':'האחות של');
-  // הורה-ילד: b הורה או ילד של a - נקבע לפי סדר הקלטה ב-EDGES (הורה ראשון)
-  const bIsParent = EDGES.some(([p,c])=>p===b&&c===a&&RELTYPE[b+'|'+a]==='הורה-ילד');
-  if(bIsParent) return he+(g==='m'?'האבא של':'האמא של');
-  return he+(g==='m'?'הבן של':'הבת של');
+  const t=RELTYPE[a+'|'+b];
+  if(t==='בני זוג') return 'בני זוג';
+  if(t==='אחים') return 'אחים';
+  // הורה-ילד: סוג הזוג בלבד, בלי לגלות מי ההורה ומי הילד (אב ובתו / אם ובנה...)
+  const e=EDGES.find(([p,c])=>RELTYPE[p+'|'+c]==='הורה-ילד'&&((p===a&&c===b)||(p===b&&c===a)));
+  const pm=PEOPLE[e[0]].gender==='m', cm=PEOPLE[e[1]].gender==='m';
+  return (pm?'אב':'אם')+' ו'+(cm?(pm?'בנו':'בנה'):(pm?'בתו':'בתה'));
 }
 const SOLUTION = ['yaakov','abraham','miriam','moshe'];
 
@@ -402,7 +401,7 @@ else if(S.phase==='play'){
 /* מצבי צילום לבדיקה בלבד: #demo-mid / #demo-end */
 if(location.hash==='#demo-mid'){
   S=freshState(); S.phase='play'; S.deadline=Date.now()+151000;
-  S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hints=[{seg:1,label:'הוא האבא של'}]; S.hintsLeft=1;
+  S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hints=[{seg:1,label:'אב ובנו'}]; S.hintsLeft=1;
   show('scrBoard'); render(); tick(); timer=setInterval(tick,500);
 }
 if(location.hash==='#demo-win'){
