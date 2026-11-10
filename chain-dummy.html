@@ -165,12 +165,13 @@ const RELTYPE = {};
 EDGES.forEach(([a,b,t])=>{ RELTYPE[a+'|'+b]=t; RELTYPE[b+'|'+a]=t; });
 function relationLabel(a,b){
   const t=RELTYPE[a+'|'+b], g=PEOPLE[b].gender;
-  if(t==='בני זוג') return g==='m'?'בעל של':'אישת של';
-  if(t==='אחים') return g==='m'?'אח של':'אחות של';
+  const he=g==='m'?'הוא ':'היא '; // b הוא האדם החסר; הכיוון במילים
+  if(t==='בני זוג') return he+(g==='m'?'הבעל של':'אישת של');
+  if(t==='אחים') return he+(g==='m'?'האח של':'האחות של');
   // הורה-ילד: b הורה או ילד של a - נקבע לפי סדר הקלטה ב-EDGES (הורה ראשון)
   const bIsParent = EDGES.some(([p,c])=>p===b&&c===a&&RELTYPE[b+'|'+a]==='הורה-ילד');
-  if(bIsParent) return g==='m'?'אבא של':'אמא של';
-  return g==='m'?'בן של':'בת של';
+  if(bIsParent) return he+(g==='m'?'האבא של':'האמא של');
+  return he+(g==='m'?'הבן של':'הבת של');
 }
 const SOLUTION = ['yaakov','abraham','miriam','moshe'];
 
@@ -267,14 +268,8 @@ function drawHints(){
   for(const h of S.hints){
     const m=ARC_MID[h.seg];
     const w=el('g',{},g);
-    // חץ קטן מהתגית אל העלה שהקשר מתייחס אליו (החוליה הבאה בשרשרת)
-    const tp = h.seg+1===5 ? POS.end : POS['s'+h.seg];
-    const dx=tp.x-m.x, dy=tp.y-m.y, len=Math.hypot(dx,dy)||1, ux=dx/len, uy=dy/len;
-    const tEdge=Math.min(29/(Math.abs(ux)||1e-6), 11/(Math.abs(uy)||1e-6));
-    const cx=m.x+ux*tEdge, cy=m.y+uy*tEdge;       // בסיס החץ על שפת התגית
-    const ax=m.x+ux*(tEdge+14), ay=m.y+uy*(tEdge+14); // קודקוד החץ לקראת העלה
-    el('path',{d:`M${ax.toFixed(1)} ${ay.toFixed(1)} L${(cx-uy*8).toFixed(1)} ${(cy+ux*8).toFixed(1)} L${(cx+uy*8).toFixed(1)} ${(cy-ux*8).toFixed(1)} Z`,fill:'#085E45'},w);
-    el('rect',{x:m.x-29,y:m.y-11,width:58,height:22,rx:11,fill:'#085E45'},w);
+    const tw=Math.max(58, h.label.length*7+18); // רוחב התגית לפי אורך הנוסח
+    el('rect',{x:m.x-tw/2,y:m.y-11,width:tw,height:22,rx:11,fill:'#085E45'},w);
     txt(w,m.x,m.y+4,11,'#fff',h.label,true);
   }
 }
@@ -407,7 +402,7 @@ else if(S.phase==='play'){
 /* מצבי צילום לבדיקה בלבד: #demo-mid / #demo-end */
 if(location.hash==='#demo-mid'){
   S=freshState(); S.phase='play'; S.deadline=Date.now()+151000;
-  S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hints=[{seg:1,label:'אבא של'}]; S.hintsLeft=1;
+  S.slots=['yaakov',null,null,null]; S.locked=[true,false,false,false]; S.triesLeft=2; S.hints=[{seg:1,label:'הוא האבא של'}]; S.hintsLeft=1;
   show('scrBoard'); render(); tick(); timer=setInterval(tick,500);
 }
 if(location.hash==='#demo-win'){
