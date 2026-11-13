@@ -1102,8 +1102,8 @@ const CHN={name:'מדור לדור',play:'‹ לשחק',
  winMsg:'כל הכבוד! מצאתם שרשרת תקינה.',loseMsg:'הפעם לא הסתדר - מחר לוח חדש.',timeMsg:'נגמר הזמן. מחר לוח חדש.',
  solTitle:'הפתרון של היום',tomorrow:'נתראה מחר עם לוח חדש'};
 let chnTimer=null;
-const CHN_POS={start:{x:311,y:175},s0:{x:250,y:91},s1:{x:147,y:87},s2:{x:80,y:166},s3:{x:102,y:268},end:{x:195,y:313}};
-const CHN_ARC=[{x:338,y:123},{x:207,y:40},{x:58,y:117},{x:91,y:217},{x:199,y:262}];
+const CHN_POS={start:{x:317,y:143},s0:{x:260,y:46},s1:{x:126,y:46},s2:{x:63,y:144},s3:{x:91,y:246},end:{x:243,y:271}};
+const CHN_ARC=[{x:328,y:95},{x:193,y:98},{x:65,y:95},{x:76,y:198},{x:152,y:310}];
 async function chnRpc(fn,args){let{data,error}=await sb.rpc(fn,{p_family_id:familyId,...args});if(error)throw error;return data}
 function chnSlotsKey(day){return `chn-slots-${familyId}-${day}`}
 function chnErrView(e,fn){e.innerHTML=prsHead(CHN.name)+`<p class="center muted" role="status">${esc(CHN.err)}</p><button type="button" class="btn secondary trv-full" id="chnRetry">${esc(CHN.retry)}</button><button type="button" class="link" id="chnHome">${esc(CHN.toGames)}</button>`;e.querySelector('#chnRetry').onclick=fn;e.querySelector('#chnHome').onclick=gamesHub}
@@ -1129,31 +1129,31 @@ function chnFirst(n){return n.split(' ')[0]}
 function chnFit(g){g.querySelectorAll('text[data-fit]').forEach(t=>{let m=+t.getAttribute('data-fit'),f=+t.getAttribute('font-size');while(f>12&&t.getComputedTextLength()>m){f-=0.5;t.setAttribute('font-size',f)}})}
  e.innerHTML=prsHead(CHN.name,`<button type="button" class="prs-hl" id="chnExit">${esc(CHN.exit)}</button>`)
   +`<div class="chn-status"><span class="chn-clock" id="chnClock">3:00</span><span>${esc(CHN.triesL)} <b id="chnTries">${triesLeft}</b></span><span>${esc(CHN.hintsL)} <b id="chnHints">${hintsLeft}</b></span></div>`
-  +`<div id="chnWrap"><svg class="chn-svg" viewBox="0 4 390 456"><g transform="translate(0,18)"><g opacity="0.45"><g transform="translate(0,306) scale(1,0.72) translate(0,-306)"><ellipse cx="195" cy="470" rx="150" ry="22" fill="#BFE0B0" stroke="#2F7D5B" stroke-width="3"/><ellipse cx="95" cy="472" rx="34" ry="14" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/><ellipse cx="300" cy="474" rx="30" ry="13" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/><path d="M178 468 C182 420 176 380 168 345 C165 330 168 318 176 308 L184 320 C182 340 186 350 196 356 C206 350 210 338 208 318 L216 306 C225 318 227 332 222 348 C212 384 206 424 212 468 Z" fill="#B07B4F" stroke="#7A5330" stroke-width="3.5" stroke-linejoin="round"/></g><g stroke="#085E45" stroke-width="3.5" stroke-linejoin="round"><circle cx="195" cy="170" r="95" fill="#5FA878"/><circle cx="120" cy="210" r="62" fill="#7DBE8A"/><circle cx="272" cy="208" r="60" fill="#7DBE8A"/><circle cx="150" cy="130" r="58" fill="#A8D5A2"/><circle cx="245" cy="125" r="56" fill="#8CCB97"/><circle cx="195" cy="100" r="48" fill="#BFE0B0"/><circle cx="105" cy="275" r="40" fill="#5FA878"/><circle cx="290" cy="272" r="42" fill="#5FA878"/><circle cx="160" cy="285" r="44" fill="#7DBE8A"/><circle cx="235" cy="288" r="42" fill="#8CCB97"/></g></g><path d="M311 175 A118 118 0 1 0 195 313" fill="none" stroke="#085E45" stroke-width="3" stroke-dasharray="1 8" stroke-linecap="round" opacity="0.8"/><g id="chnHintTags" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g><g id="chnLeaves" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g></g></svg></div>`
+  +`<div id="chnWrap"><svg class="chn-svg" viewBox="0 0 393 340" width="393" height="310" xmlns="http://www.w3.org/2000/svg"><g opacity="0.45" transform="translate(0,-28) scale(1,.8)"><g transform="translate(0,306) scale(1,0.72) translate(0,-306)"><ellipse cx="195" cy="470" rx="150" ry="22" fill="#BFE0B0" stroke="#2F7D5B" stroke-width="3"/><ellipse cx="95" cy="472" rx="34" ry="14" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/><ellipse cx="300" cy="474" rx="30" ry="13" fill="#A8D5A2" stroke="#2F7D5B" stroke-width="2.5"/><path d="M178 468 C182 420 176 380 168 345 C165 330 168 318 176 308 L184 320 C182 340 186 350 196 356 C206 350 210 338 208 318 L216 306 C225 318 227 332 222 348 C212 384 206 424 212 468 Z" fill="#B07B4F" stroke="#7A5330" stroke-width="3.5" stroke-linejoin="round"/></g><g stroke="#085E45" stroke-width="3.5" stroke-linejoin="round"><circle cx="195" cy="170" r="95" fill="#5FA878"/><circle cx="120" cy="210" r="62" fill="#7DBE8A"/><circle cx="272" cy="208" r="60" fill="#7DBE8A"/><circle cx="150" cy="130" r="58" fill="#A8D5A2"/><circle cx="245" cy="125" r="56" fill="#8CCB97"/><circle cx="195" cy="100" r="48" fill="#BFE0B0"/><circle cx="105" cy="275" r="40" fill="#5FA878"/><circle cx="290" cy="272" r="42" fill="#5FA878"/><circle cx="160" cy="285" r="44" fill="#7DBE8A"/><circle cx="235" cy="288" r="42" fill="#8CCB97"/></g></g><path d="M317 143 Q315 48 260 46 L126 46 Q53 57 63 144 L91 246 Q126 288 243 271" fill="none" stroke="#085E45" stroke-width="2.5" stroke-dasharray="1 7" stroke-linecap="round"/><g id="chnHintTags" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g><g id="chnLeaves" font-family="Arial,'Noto Sans Hebrew',sans-serif" text-anchor="middle"></g></svg></div>`
   +`<div class="chn-bank"><div class="chn-bank-label">${esc(CHN.bankLabel)}</div><div class="chn-chips" id="chnChips"></div></div>`
   +`<div class="chn-actions"><button type="button" class="btn secondary chn-btn-hint" id="chnHintBtn">${esc(CHN.hint)}</button><button type="button" class="btn primary" id="chnOk" disabled>${esc(CHN.approve)}</button></div>`;
  function drawLeaves(){let g=e.querySelector('#chnLeaves');g.innerHTML='';
   let dup={};slots.forEach(id=>{if(id){let f=chnFirst(names[id]);dup[f]=(dup[f]||0)+1}});
   function epName(p,full){let ws=full.split(' ');
-   if(ws.length<=2&&full.length<=11){let t=stxt(w,p.x,p.y+6,16,'#fff',full,true);t.setAttribute('data-fit',84)}
+   if(ws.length<=2&&full.length<=11){let t=stxt(w,p.x,p.y+6,16,'#fff',full,true);t.setAttribute('data-fit',94)}
    else{let l1=ws.slice(0,-1).join(' '),l2=ws[ws.length-1];
-    let t1=stxt(w,p.x,p.y-3,13.5,'#fff',l1,true);t1.setAttribute('data-fit',81);
-    let t2=stxt(w,p.x,p.y+12,13.5,'#fff',l2,true);t2.setAttribute('data-fit',81)}}
-  let w=eln('g',{},g);eln('ellipse',{cx:CHN_POS.start.x,cy:CHN_POS.start.y,rx:50,ry:33,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);epName(CHN_POS.start,names[s.start.id]);eln('path',{d:'M267 212 L355 212 L348 223.5 L355 235 L267 235 L274 223.5 Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);stxt(w,CHN_POS.start.x,228,12.5,'#fff',CHN.startTag,true);
-  w=eln('g',{},g);eln('ellipse',{cx:CHN_POS.end.x,cy:CHN_POS.end.y,rx:50,ry:33,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);epName(CHN_POS.end,names[s.end.id]);eln('path',{d:'M151 350 L239 350 L232 361.5 L239 373 L151 373 L158 361.5 Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);stxt(w,CHN_POS.end.x,366,12.5,'#fff',CHN.endTag,true);
+    let t1=stxt(w,p.x,p.y-3,13.5,'#fff',l1,true);t1.setAttribute('data-fit',94);
+    let t2=stxt(w,p.x,p.y+12,13.5,'#fff',l2,true);t2.setAttribute('data-fit',94)}}
+  let w=eln('g',{},g);eln('ellipse',{cx:CHN_POS.start.x,cy:CHN_POS.start.y,rx:53,ry:31,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);epName(CHN_POS.start,names[s.start.id]);eln('path',{d:'M270 182 h94 l-7 10 7 10 h-94 l7 -10Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);stxt(w,CHN_POS.start.x,197,13,'#fff',CHN.startTag,true);
+  w=eln('g',{},g);eln('ellipse',{cx:CHN_POS.end.x,cy:CHN_POS.end.y,rx:53,ry:31,fill:'#085E45',stroke:'#085E45','stroke-width':3},w);epName(CHN_POS.end,names[s.end.id]);eln('path',{d:'M196 310 h94 l-7 10 7 10 h-94 l7 -10Z',fill:'#C9A227',stroke:'#8a6d12','stroke-width':1.5},w);stxt(w,CHN_POS.end.x,325,13,'#fff',CHN.endTag,true);
   for(let i=0;i<4;i++){let p=CHN_POS['s'+i],id=slots[i],lk=!!locked[i];
-   w=eln('g',{class:'chn-leaf','data-slot':i},g);
-   if(id){eln('ellipse',{cx:p.x,cy:p.y,rx:44,ry:31,fill:'#fff',stroke:'#085E45','stroke-width':3},w);
-    let ws=names[id].split(' '),f=ws[0],lb=dup[f]>1&&ws[1]?f+' '+ws[1][0]+'׳':f;
-    let t=stxt(w,p.x,p.y+7,20,'#0C3B2E',lb,false);t.setAttribute('data-fit',76);
+   w=eln('g',{class:'chn-leaf','data-slot':i,role:'button',tabindex:'0','aria-label':id?names[id]:String(i+1)},g);eln('rect',{x:p.x-47,y:p.y-29.5,width:94,height:59,rx:25,fill:'transparent'},w);w.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();onSlot(i,w)}});
+   if(id){eln('ellipse',{cx:p.x,cy:p.y,rx:47,ry:29.5,fill:'#fff',stroke:'#085E45','stroke-width':3},w);
+    let ws=names[id].split(' '),f=ws[0],lb=f;if(dup[f]>1&&ws[1]){let peers=slots.filter(x=>x&&x!==id&&chnFirst(names[x])===f).map(x=>names[x].split(' ').slice(1).join(' ')),last=ws.slice(1).join(' '),n=1;while(n<last.length&&peers.some(x=>x.slice(0,n)===last.slice(0,n)))n++;lb=f+' '+last.slice(0,n)+(n<last.length?'׳':'')}
+    let t=stxt(w,p.x,p.y+7,19.5,'#0C3B2E',lb,false);t.setAttribute('data-fit',82);
     if(lk){eln('circle',{cx:p.x+33,cy:p.y-21,r:9,fill:'#085E45'},w);stxt(w,p.x+33,p.y-16.5,11,'#fff','✓',true)}}
-   else{eln('ellipse',{cx:p.x,cy:p.y,rx:44,ry:31,fill:'#F7F4EB',stroke:'#085E45','stroke-width':2.5,'stroke-dasharray':'6 5'},w);stxt(w,p.x,p.y+8,23,'#085E45','?',false)}
+   else{eln('ellipse',{cx:p.x,cy:p.y,rx:47,ry:29.5,fill:'#F7F4EB',stroke:'#085E45','stroke-width':2.5,'stroke-dasharray':'6 5'},w);stxt(w,p.x,p.y+8,23,'#085E45','?',false)}
    w.addEventListener('click',()=>onSlot(i,w))}
   chnFit(g)}
  function drawHints(){let g=e.querySelector('#chnHintTags');g.innerHTML='';
-  for(let h of hints){let m=CHN_ARC[h.seg];let w=eln('g',{},g);let tw=Math.max(60,h.label.length*8+18);eln('rect',{x:m.x-tw/2,y:m.y-13,width:tw,height:26,rx:13,fill:'#085E45'},w);stxt(w,m.x,m.y+4.5,13,'#fff',h.label,true)}}
+  for(let h of hints){let m=CHN_ARC[h.seg];let w=eln('g',{},g);let tw=Math.max(60,h.label.length*7+18);eln('rect',{x:m.x-tw/2,y:m.y-13,width:tw,height:26,rx:13,fill:'#085E45'},w);stxt(w,m.x,m.y+4.5,13,'#fff',h.label,true)}}
  function drawBank(){let c=e.querySelector('#chnChips');c.innerHTML='';let placed=new Set(slots.filter(Boolean));
-  (s.bank||[]).forEach(b=>{if(placed.has(b.id))return;let btn=document.createElement('button');btn.type='button';btn.className='chn-chip'+(sel===b.id?' sel':'');btn.textContent=b.name;btn.onclick=()=>onChip(b.id);c.appendChild(btn)});
+  (s.bank||[]).forEach(b=>{if(placed.has(b.id))return;let btn=document.createElement('button');btn.type='button';btn.className='chn-chip'+(sel===b.id?' sel':'');let label=document.createElement('span');label.textContent=b.name;btn.appendChild(label);btn.onclick=()=>onChip(b.id);c.appendChild(btn)});
   if(!c.children.length){let sp=document.createElement('span');sp.style.cssText='font-size:12px;color:#6b7f76';sp.textContent=CHN.bankEmpty;c.appendChild(sp)}}
  function updBtns(){e.querySelector('#chnTries').textContent=triesLeft;e.querySelector('#chnHints').textContent=hintsLeft;e.querySelector('#chnHintBtn').disabled=hintsLeft<=0||busy;e.querySelector('#chnOk').disabled=busy||!slots.every(x=>x)}
  function render(){drawLeaves();drawHints();drawBank();updBtns()}
@@ -1197,4 +1197,18 @@ async function chnRankings(e){let host=e.querySelector('#trvRankings'),ep=trvVie
    host.innerHTML=`<div class="trv-ranktabs" role="group" aria-label="תקופת לוח הניקוד">`+['daily','weekly','annual'].map(k=>`<button type="button" data-period="${k}" aria-pressed="${k===sel}">${PRS.period[k]}</button>`).join('')+`</div><p class="trv-rankperiod">${esc(per)}</p>`+(rows.length?trvRankTable(rows):'<p class="center muted" role="status">עדיין אין תוצאות לתקופה הזו.</p>')+`<p class="trv-ranknote">${sel==='daily'?'כל מי ששיחק מופיע, גם עם 0.':'סכום נקודות מדור לדור. מוצגים בעלי נקודות בלבד.'}</p>`;
    host.querySelectorAll('[data-period]').forEach(b=>b.onclick=()=>{sel=b.dataset.period;draw()})};draw()}
  catch(x){host.innerHTML=`<p class="muted" role="status">${esc(CHN.err)}</p>`}}
-</script><style>@media(max-width:430px){#trivia:has(.chn-status){padding:0;display:flex;flex-direction:column;height:calc(100dvh - 168px)}#trivia:has(.chn-status) .trv{display:flex;flex-direction:column;height:100%}.trv:has(.chn-status) .trv-head{margin-bottom:2px;padding:7px 18px;flex:none}.chn-status{flex:none;font-size:13.5px}.chn-clock{font-size:24px}#chnWrap{flex:1 1 auto;min-height:250px}.chn-svg{height:100%;width:100%}.chn-bank{padding:8px 10px;flex:none}.chn-bank-label{font-size:13px;margin-bottom:6px}.chn-chips{gap:8px;min-height:40px}.chn-chip{font-size:15px;padding:8px 12px;flex:0 0 44%;text-align:center}.chn-actions{margin:8px 4px 0;flex:none}}</style></body></html>
+</script><style>/* v2.109: approved middle-size board, fixed drawing scale and compact bank. */
+@media(max-width:430px){
+#trivia:has(.chn-status){padding:0;display:flex;flex-direction:column;height:calc(100dvh - 148px);margin-inline:-18px;width:calc(100% + 36px)}
+#trivia:has(.chn-status) .trv{display:flex;flex-direction:column;height:100%;min-height:0}
+.trv:has(.chn-status) .trv-head{margin:0 0 2px;padding:7px 23px;flex:none;min-height:33px}
+.chn-status{flex:none;font-size:14px;min-height:35px;align-items:center;margin:0 22px;padding-bottom:4px}.chn-clock{font-size:26px}
+#chnWrap{flex:1 1 310px;min-height:250px;max-height:310px}.chn-svg{height:100%;width:100%}
+.chn-bank{padding:7px 10px;margin:0 16px;flex:none;min-height:196px}.chn-bank-label{font-size:12px;margin-bottom:2px;line-height:18px}
+.chn-chips{gap:0 8px;min-height:44px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.chn-chip{font-size:14.5px;padding:5px 0;min-height:44px;border:0;background:transparent;display:flex;align-items:stretch;justify-content:stretch;min-width:0}
+.chn-chip>span{border:1px solid var(--green);border-radius:999px;min-height:34px;display:flex;align-items:center;justify-content:center;width:100%;padding:3px 6px;overflow-wrap:anywhere;line-height:18px;background:var(--cream)}
+.chn-chip.sel{background:transparent;color:var(--ink)}.chn-chip.sel>span{background:var(--green);color:#fff}
+.chn-actions{margin:8px 16px 0;flex:none;min-height:48px}.chn-actions .btn{margin:0;min-height:48px;font-size:17px}.chn-btn-hint{background:transparent;color:var(--green);border-color:var(--green)}
+}
+</style></body></html>
